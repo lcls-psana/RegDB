@@ -3,8 +3,11 @@
 namespace RegDB;
 
 require_once( 'regdb.inc.php' );
+require_once( 'authdb/authdb.inc.php' );
 require_once( 'lusitime/lusitime.inc.php' );
+require_once( 'dataportal/dataportal.inc.php' );
 
+use AuthDB\AuthDB;
 use LusiTime\LusiTime;
 
 /**
@@ -539,6 +542,83 @@ class RegDBExperiment {
             if ($operator_uid_param) $uid = strtolower($operator_uid_param->value()) ;
         }
         return $uid ;
+    }
+    public function find_parameters_v () {
+        $parameters = array (
+            'values' => array ()
+        ) ;
+
+        // Find the latest set of parameters (if any)
+        $result = $this->connection->query("SELECT * FROM {$this->connection->database}.experiment_paramv WHERE exper_id={$this->id()} ORDER BY modified_time DESC LIMIT 1") ;
+        $nrows = mysql_numrows($result) ;
+        if ($nrows) {
+            if ($nrows != 1)
+                throw new ShiftMgrException (
+                        __class__.'::'.__METHOD__ ,
+                        "internal error when looking for extended parameters of experiment ID {$this->id()}") ;
+                        
+            $attr = mysql_fetch_array($result, MYSQL_ASSOC) ;
+            $id   = intval(trim($attr['id'])) ;
+
+            $parameters['modified_uid']  = trim($attr['modified_uid']) ;
+            $parameters['modified_time'] = LusiTime::from64(trim($attr['modified_time']))->toStringShort() ;
+            $parameters['id'] = $id ;
+            
+            // Fetch values from that set
+            $result = $this->connection->query("SELECT * FROM {$this->connection->database}.experiment_paramv_value WHERE param_id={$id}") ;
+            for ($i = 0, $nrows = mysql_numrows($result); $i < $nrows; $i++) {
+                $attr  = mysql_fetch_array($result, MYSQL_ASSOC) ;
+                $key   = trim($attr['key']) ;
+                $value = trim($attr['value']) ;
+                $parameters['values'][$key] = $value ;
+            }
+        }
+        
+        // Mix in parameters from the experiment definition
+        
+        $parameters['values']['general-spokesperson'] = \DataPortal\DataPortal::decorated_experiment_contact_info($this) ;
+        $parameters['values']['general-title']        = $this->description() ;
+        
+        return $parameters ;
+    }
+    
+    public function save_parameters_v ($values) {
+        
+        $modified_time = LusiTime::now()->to64() ;
+        $modified_uid = $this->connection->escape_string(AuthDB::instance()->authName()) ;
+        
+        // First, make an empty parameter set
+        $this->connection->query("INSERT INTO {$this->connection->database}.experiment_paramv VALUES(NULL,{$this->id()},'{$modified_uid}',{$modified_time})") ;
+        
+        // Get the parameter set's identifier which we're going to use to log
+        // parameter set's values in a different table.
+        $parameters = $this->find_parameters_v () ;
+        $id = $parameters['id'] ;
+
+        // Log values for the set
+        foreach ($values as $key => $value) {
+
+            $key   = trim($key) ;
+            $value = trim($value) ;
+
+            // Special processing for parameters from the experiment definition
+            switch ($key) {
+                case 'general-spokesperson' :
+                    // ATTENTION: This parameter can't be set in this way
+                    continue ;
+                case 'general-title':
+                    $this->set_description($value) ;
+                    continue ;
+            }
+
+            $key   = $this->connection->escape_string($key) ;
+            $value = $this->connection->escape_string("{$value}") ;
+
+            $this->connection->query("INSERT INTO {$this->connection->database}.experiment_paramv_value VALUES({$id},'{$key}','{$value}')") ;
+        }
+        
+        // Return the complete set
+        return $this->find_parameters_v () ;
     }
 }
 ?>

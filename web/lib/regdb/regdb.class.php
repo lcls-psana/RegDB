@@ -771,6 +771,12 @@ HERE;
             $groups['ps-las'] = True;
         }
 
+        /* Facility e-logs.
+         */
+        if( is_null( $instr ) || ( $instr == 'IOC' )) {
+            $groups['ps-ioc'] = True;
+        }
+
         /* Add groups which aren't really experiment or instrument specific.
          */
         //$groups['ps-data'] = True;
