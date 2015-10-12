@@ -555,6 +555,34 @@ HERE;
         return $list;
     }
 
+    
+    /* ===================
+     *   EXPERIMENT INFO
+     * ===================
+     */
+    public function find_attachment_v_by_id ($id, $include_data=false) {
+
+        $result = $this->connection->query (
+            'SELECT id,exper_id,name,data_type,'.($include_data ? 'data,':'').'LENGTH(data) AS "data_size",description ' .
+            "FROM {$this->connection->database}.experiment_paramv_attachment WHERE id=".$id) ;
+
+        $nrows = mysql_numrows($result) ;
+        if (!$nrows) return null ;
+        if ($nrows != 1)
+            throw new RegDBException(__METHOD__, "unexpected size of result set" );
+
+        $attr = mysql_fetch_array($result, MYSQL_ASSOC) ;
+        return array (
+            'id'          => $attr['id'] ,
+            'exper_id'    => $attr['exper_id'] ,
+            'name'        => $attr['name'] ,
+            'data'        => $include_data ? $attr['data'] : '' ,
+            'data_type'   => $attr['data_type'] ,
+            'data_size'   => $attr['data_size'] ,
+            'description' => $attr['description']
+        ) ;
+    }
+
     /* =========
      *   FILES
      * =========
@@ -723,6 +751,7 @@ HERE;
             $groups['xppcom12'] = True;
             $groups['xppcom13'] = True;
             $groups['xpptst14'] = True;
+            $groups['xpptut15'] = True;
         }
         /* CXI commissionning, in-house, etc. experiments for the year of 2010.
          */
@@ -732,6 +761,7 @@ HERE;
             $groups['ps-cxi-elog'] = True;
             $groups['ps-cxi-geom'] = True;
             $groups['cxiopr'] = True;
+            $groups['cxitst15'] = True;
         }
         /* MEC commissionning, in-house, etc. experiments for the year of 2010.
          */
@@ -779,7 +809,8 @@ HERE;
 
         /* Add groups which aren't really experiment or instrument specific.
          */
-        //$groups['ps-data'] = True;
+        $groups['ps-data'] = True;
+        $groups['ps-md'] = True;
 
         return $groups;
     }

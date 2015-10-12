@@ -579,10 +579,12 @@ class RegDBExperiment {
         $parameters['values']['general-spokesperson'] = \DataPortal\DataPortal::decorated_experiment_contact_info($this) ;
         $parameters['values']['general-title']        = $this->description() ;
         
+        $parameters['attachments'] = $this->find_attachments_v() ;
+
         return $parameters ;
     }
     
-    public function save_parameters_v ($values) {
+    public function save_parameters_v ($values, $attachments) {
         
         $modified_time = LusiTime::now()->to64() ;
         $modified_uid = $this->connection->escape_string(AuthDB::instance()->authName()) ;
@@ -617,8 +619,54 @@ class RegDBExperiment {
             $this->connection->query("INSERT INTO {$this->connection->database}.experiment_paramv_value VALUES({$id},'{$key}','{$value}')") ;
         }
         
+        foreach ($attachments as $id => $value) {
+            if ($value->delete) {
+                $this->delete_attachment_v_by_id($id) ;
+                continue ;
+            }
+            $description = $this->connection->escape_string($value->description) ;
+            $this->connection->query (
+                "UPDATE {$this->connection->database}.experiment_paramv_attachment SET description='{$description}' WHERE id={$id}"
+            ) ;
+        }
+
         // Return the complete set
         return $this->find_parameters_v () ;
+    }
+    public function find_attachments_v ($include_data=false) {
+
+        $result = $this->connection->query (
+            "SELECT id FROM {$this->connection->database}.experiment_paramv_attachment WHERE exper_id={$this->id()}") ;
+
+        $attachments = array() ;
+        for ($i = 0, $nrows = mysql_numrows($result); $i < $nrows; $i++) {
+            $attr = mysql_fetch_array($result, MYSQL_ASSOC) ;
+            array_push (
+                $attachments ,
+                $this->find_attachment_v_by_id($attr['id'], $include_data)) ;
+        }
+        return $attachments ;
+    }
+    public function find_attachment_v_by_id ($id, $include_data=false) {
+        return $this->registry->find_attachment_v_by_id ($id, $include_data) ;
+    }
+
+    public function save_attachment_v ($name, $data, $data_type) {
+
+        $description = $name ;
+
+        $this->connection->query (
+            "INSERT INTO {$this->connection->database}.experiment_paramv_attachment VALUES(NULL,".$this->id() .
+            ",'" .$this->connection->escape_string($name) .
+            "','".$this->connection->escape_string($data) .
+            "','".$this->connection->escape_string($data_type).
+            "','".$this->connection->escape_string($description)."')") ;
+
+        return $this->find_attachment_v_by_id('(SELECT LAST_INSERT_ID())') ;        
+    }
+    public function delete_attachment_v_by_id ($id) {
+        $result = $this->connection->query (
+            "DELETE FROM {$this->connection->database}.experiment_paramv_attachment WHERE id={$id}") ;
     }
 }
 ?>
