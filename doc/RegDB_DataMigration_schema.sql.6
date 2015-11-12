@@ -101,6 +101,8 @@ CREATE  TABLE IF NOT EXISTS `REGDB`.`DATA_MIGRATION_NERSC` (
   `start_time` BIGINT UNSIGNED DEFAULT NULL ,
   `stop_time` BIGINT UNSIGNED DEFAULT NULL ,
   `error_msg` TEXT ,
+  `host` TEXT NOT NULL ,
+  `dirpath` TEXT NOT NULL ,
   `status` ENUM ('WAIT','DONE','FAIL') DEFAULT 'WAIT' ,
   PRIMARY KEY (`exper_id`,`file`) ,
   INDEX `DATA_MIGRATION_NERSC_FK_1` (`exper_id` ASC) ,
