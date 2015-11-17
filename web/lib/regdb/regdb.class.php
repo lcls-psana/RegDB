@@ -806,6 +806,13 @@ HERE;
         if( is_null( $instr ) || ( $instr == 'IOC' )) {
             $groups['ps-ioc'] = True;
         }
+        
+        /* Diagnostic experiments
+         */
+        if( is_null( $instr ) || ( $instr == 'DIA' )) {
+            $groups['ps-dia'] = True;
+            $groups['ps-dia-sci'] = True;
+        }
 
         /* Add groups which aren't really experiment or instrument specific.
          */

@@ -148,6 +148,10 @@ class URAWI {
     
     
     public function proposals ($startDate=null, $stopDate=null) {
+
+        // ATTENTION: The Web services are broken! Disable them for now.
+//        return array() ; ;
+
         $parameters = '' ;
         if (!is_null($startDate)) {
             if ($startDate instanceof LusiTime)
@@ -172,6 +176,10 @@ class URAWI {
     }
     
     public function proposalInfo ($number) {
+
+        // ATTENTION: The Web services are broken! Disable them for now.
+//        throw new URAWINoProposalException() ;
+
         if (!is_string($number)) throw new RegDBException(__METHOD__, "invalid type of parameter 'number'") ;
         $number = strtoupper($number) ;
 

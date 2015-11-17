@@ -11,6 +11,11 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-02-15
+2015-11-16 Igor Gaponenko
+- added support for managing diagnostic groups for instrument DIA
+- disable URAWI due to the general instability of the service
+
 Tag: V00-02-14
 2015-10-12 Igor Gaponenko
 - finished implementeting extended experiment info (JIRA PSWA-56)

@@ -5,12 +5,7 @@
         <group>
             <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/urawi.class.php</file>
         </group>
-        <group name="PCDS Web Apps">
-            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/ws/drp_policy_get.php</file>
-            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/urawi.class.php</file>
-            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/index.php</file>
-            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/urawi_test.php</file>
-        </group>
         <group name="PCDS Web App"/>
+        <group name="PCDS Web Apps"/>
     </open-files>
 </project-private>
