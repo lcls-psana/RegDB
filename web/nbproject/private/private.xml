@@ -5,11 +5,14 @@
         <group name="PCDS Web App">
             <file>file://AFS/slac.stanford.edu/u/ec/gapon/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
         </group>
-        <group name="PCDS Web Apps">
-            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
-        </group>
         <group>
             <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
+        </group>
+        <group name="PCDS Web Apps">
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/regdbexperiment.class.php</file>
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/ws/run13_proposal_save.php</file>
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/ws/run13_proposal_get.php</file>
         </group>
     </open-files>
 </project-private>

@@ -11,6 +11,11 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-02-17
+2015-12-16 Igor Gaponenko
+- first fully functining version of the Run 13 Proposal Questionnaire
+- MySQL backend is implemented
+
 Tag: V00-02-16
 2015-12-16 Igor Gaponenko
 - URAWI integration for Run 13

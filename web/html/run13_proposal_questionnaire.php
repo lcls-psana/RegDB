@@ -1,3 +1,102 @@
+<?php
+
+/*
+ * 
+ * AUTHORIZATION: the PI of the proposal
+ */
+require_once 'dataportal/dataportal.inc.php' ;
+
+/**
+ * Custom error handler
+ *
+ * @param string $msg
+ * @param arrey $stack
+ */
+class EventHandler {
+    public function on_error($msg, $stack=null) {
+        print <<<HERE
+<div id="error">
+  $msg
+</div>
+HERE;
+    }
+} ;
+\DataPortal\Service::set_custom_error_handler(new EventHandler()) ;
+
+\DataPortal\Service::run_handler ('GET', function ($SVC) {
+    
+    $proposalNo = $SVC->required_str('proposal') ;
+
+    $info = $SVC->safe_assign(
+        $SVC->urawi()->proposalInfo($proposalNo) ,
+        "No such proposal found: {$proposalNo}. Did yoy miss the letter 'L' at the begining of the proposal?") ;
+
+    $experimentName = $info->posix_group('2016-03-24') ;
+    $exper = $SVC->safe_assign(
+        $SVC->regdb()->find_experiment_by_unique_name($info->posix_group()) ,
+        "We're sorry - this proposal is not found in our system") ;
+
+    $SVC->assert(
+        $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ,
+        "We're sorry - you're not authorized to view/modify this document") ;
+
+    
+    $contacts = array (
+        "LK85" => '' ,
+        "LK86" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
+        "LK88" => 'Aquila, Andy (aquila@slac.stanford.edu)' ,
+        "LK89" => '' ,
+        "LK96" => '' ,
+        "LK99" => '' ,
+        "LL02" => 'Hunter, Mark Steven (mhunter2@slac.stanford.edu)' ,
+        "LL04" => '' ,
+        "LL05" => '' ,
+        "LL09" => '' ,
+        "LL13" => '' ,
+        "LL14" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
+        "LL20" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
+        "LL22" => 'Dakovski, Georgi L. (dakovski@slac.stanford.edu)' ,
+        "LL23" => '' ,
+        "LL25" => '' ,
+        "LL28" => '' ,
+        "LL29" => 'Lee, Hae Ja (haelee@slac.stanford.edu)' ,
+        "LL31" => '' ,
+        "LL33" => 'MacKinnon, Andy (andymack@slac.stanford.edu)' ,
+        "LL34" => '' ,
+        "LL36" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
+        "LL37" => '' ,
+        "LL38" => '' ,
+        "LL41" => '' ,
+        "LL44" => '' ,
+        "LL48" => '' ,
+        "LL58" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
+        "LL71" => '' ,
+        "LL72" => 'Dakovski, Georgi L. (dakovski@slac.stanford.edu)' ,
+        "LL78" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
+        "LL82" => 'Nagler, Bob (bnagler@slac.stanford.edu)' ,
+        "LL84" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LL86" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
+        "LL94" => '' ,
+        "LM01" => '' ,
+        "LM04" => '' ,
+        "LM08" => 'Hunter, Mark Steven (mhunter2@slac.stanford.edu)' ,
+        "LM09" => '' ,
+        "LM11" => '' ,
+        "LM14" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
+        "LM16" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
+        "LM18" => '' ,
+        "LM20" => '' ,
+        "LM23" => '' ,
+        "LM27" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
+        "LM38" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
+        "LM47" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LM48" => '' ,
+        "LM51" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LM52" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)'
+    ) ;
+        
+?>
+
 <!doctype html>
 <html>
 
@@ -15,6 +114,7 @@ body {
 #proposal {
     padding:        20px;
     padding-left:   30px;
+    padding-bottom:  5px;
     border-top:  solid 1px #c0c0c0;
 
     font-family:    'Segoe UI',Tahoma,Helvetica,Arial,Verdana,sans-serif;
@@ -36,7 +136,8 @@ body {
 }
 
 #comments {
-    padding:    20px;
+    padding:        20px;
+    padding-bottom:  5px;
 /*    border-top:     solid 1px #c0c0c0;*/
 /*    border-left:    solid 1px #c0c0c0;*/
 
@@ -51,9 +152,16 @@ body {
     color:          red;
     font-weight:    bold;
 }
-
+#status {
+    margin-top:     10px;
+    padding:        5px;
+    padding-right:  10px;
+    font-family:    Lucida Grande, Lucida Sans, Arial, sans-serif;
+    font-size:      13px;
+    color:          maroon;
+}
 #tabs {
-    margin-top: 10px;
+    margin-top: 5px;
     padding:    0;
     background: 0;
 
@@ -282,9 +390,64 @@ table.standard > tbody td.unit {
 
 <script>
 
-function sync_posix_group (proposalNo) {
-    var url    = '../regdb/ws/proposal_sync_group.php' ;
-    var params = {proposal: proposalNo} ;
+var proposal = '<?=$proposalNo?>' ;
+var exper_id = <?=$exper->id()?> ;
+
+
+function _pad (n) {
+    return (n < 10 ? '0' : '') + n ;
+}
+function time2htmlLocal (t) {
+    return  t.getFullYear() +
+        '-' + _pad(t.getMonth() + 1) + 
+        '-' + _pad(t.getDate()) +
+        '&nbsp;&nbsp;<span style="font-weight:bold;">' +
+        _pad(t.getHours()) +
+        ':' +
+        _pad(t.getMinutes()) +
+        ':' +
+        _pad(t.getSeconds()) +
+        '</span>' ;
+}
+
+function updateStatus (s) {
+    $('#status').html(s) ;
+}
+
+function saveProposalParameter (id, val) {
+    var url    = '../regdb/ws/run13_proposal_save.php' ;
+    var params = {
+        proposal: proposal ,
+        exper_id: exper_id ,
+        id:       id ,
+        val:      val
+    } ;
+    var jqXHR  = $.post (
+        url ,
+        params ,
+        function(data) {
+            var result = eval(data) ;
+            if (result.status != 'success') {
+                alert('the Web service reported the following problem with the request: '+result.message) ;
+                return ;
+            }
+            var p = data.proposal ;
+            var msec = p.modified_time / 1000000 ;
+            var t = new Date(msec) ;
+            var s = time2htmlLocal(t) ;
+            updateStatus('[ Last update on: '+s+' by user: <b>'+p.modified_uid+'</b> ]') ;
+        } ,
+        'JSON'
+    ).error(function () {
+        alert('operation failed because of: '+jqXHR.statusText) ;
+    }) ;
+}
+function getProposalParameters (on_success) {
+    var url    = '../regdb/ws/run13_proposal_get.php' ;
+    var params = {
+        proposal: proposal ,
+        exper_id: exper_id
+    } ;
     var jqXHR  = $.get (
         url ,
         params ,
@@ -294,14 +457,13 @@ function sync_posix_group (proposalNo) {
                 alert('the Web service reported the following problem with the request: '+result.message) ;
                 return ;
             }
-            window.location.reload(true) ;
+            on_success(data.params) ;
         } ,
         'JSON'
     ).error(function () {
         alert('operation failed because of: '+jqXHR.statusText) ;
     }) ;
-}
-
+}    
 $(function () {
     $('#tabs').tabs() ;
 
@@ -309,125 +471,48 @@ $(function () {
         var elem = $(this) ,
             id   = elem.attr('id') ,
             val  = elem.val() ;
-        console.log(id, val) ;
+        saveProposalParameter(id, val) ;
     }) ;
     $('input').change(function () {
         var elem = $(this) ,
             id   = elem.attr('id') ,
             val  = elem.val() ;
-        console.log(id, val) ;
+        saveProposalParameter(id, val) ;
     }) ;
     $('textarea').change(function () {
         var elem = $(this) ,
             id   = elem.attr('id') ,
             val  = elem.val() ;
-        console.log(id, val) ;
+        saveProposalParameter(id, val) ;
     }) ;
+    getProposalParameters(function (params) {
+        var modified_time = 0 ,
+            modified_uid  = '' ;
+        for (var i in params) {
+            var p = params[i] ;
+            var elem = $('#'+p.id) ;
+            if (elem.length) {
+                elem.val(p.val) ;
+            }
+            if (p.modified_time > modified_time) {
+                modified_time  = p.modified_time ;
+                modified_uid      = p.modified_uid ;
+            }
+        }
+        if (modified_time) {
+            var msec = modified_time / 1000000 ;
+            var t = new Date(msec) ;
+            var s = time2htmlLocal(t) ;
+            updateStatus('[ Last update on: '+s+' by user: <b>'+modified_uid+'</b> ]') ;
+        }
+    }) ;
+    updateStatus('[ No data submitted for the proposal ]') ;
 }) ;
 
 </script>
 
 </head>
 <body>
-
-<?php
-
-/*
- * 
- * AUTHORIZATION: the PI of the proposal
- */
-require_once 'dataportal/dataportal.inc.php' ;
-
-/**
- * Custom error handler
- *
- * @param string $msg
- * @param arrey $stack
- */
-class EventHandler {
-    public function on_error($msg, $stack=null) {
-        print <<<HERE
-<div id="error">
-  $msg
-</div>
-HERE;
-    }
-} ;
-\DataPortal\Service::set_custom_error_handler(new EventHandler()) ;
-
-\DataPortal\Service::run_handler ('GET', function ($SVC) {
-    
-    $proposalNo = $SVC->required_str('proposal') ;
-
-    $info = $SVC->safe_assign(
-        $SVC->urawi()->proposalInfo($proposalNo) ,
-        "No such proposal found: {$proposalNo}. Did yoy miss the letter 'L' at the begining of the proposal?") ;
-
-    $experimentName = $info->posix_group('2016-03-24') ;
-    $exper = $SVC->safe_assign(
-        $SVC->regdb()->find_experiment_by_unique_name($info->posix_group()) ,
-        "We're sorry - this proposal is not found in our system") ;
-
-    $SVC->assert(
-        $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ,
-        "We're sorry - you're not authorized to view/modify this document") ;
-
-    
-    $contacts = array (
-        "LK85" => '' ,
-        "LK86" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
-        "LK88" => 'Aquila, Andy (aquila@slac.stanford.edu)' ,
-        "LK89" => '' ,
-        "LK96" => '' ,
-        "LK99" => '' ,
-        "LL02" => 'Hunter, Mark Steven (mhunter2@slac.stanford.edu)' ,
-        "LL04" => '' ,
-        "LL05" => '' ,
-        "LL09" => '' ,
-        "LL13" => '' ,
-        "LL14" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LL20" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
-        "LL22" => 'Dakovski, Georgi L. (dakovski@slac.stanford.edu)' ,
-        "LL23" => '' ,
-        "LL25" => '' ,
-        "LL28" => '' ,
-        "LL29" => 'Lee, Hae Ja (haelee@slac.stanford.edu)' ,
-        "LL31" => '' ,
-        "LL33" => 'MacKinnon, Andy (andymack@slac.stanford.edu)' ,
-        "LL34" => '' ,
-        "LL36" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
-        "LL37" => '' ,
-        "LL38" => '' ,
-        "LL41" => '' ,
-        "LL44" => '' ,
-        "LL48" => '' ,
-        "LL58" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
-        "LL71" => '' ,
-        "LL72" => 'Dakovski, Georgi L. (dakovski@slac.stanford.edu)' ,
-        "LL78" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
-        "LL82" => 'Nagler, Bob (bnagler@slac.stanford.edu)' ,
-        "LL84" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
-        "LL86" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LL94" => '' ,
-        "LM01" => '' ,
-        "LM04" => '' ,
-        "LM08" => 'Hunter, Mark Steven (mhunter2@slac.stanford.edu)' ,
-        "LM09" => '' ,
-        "LM11" => '' ,
-        "LM14" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LM16" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LM18" => '' ,
-        "LM20" => '' ,
-        "LM23" => '' ,
-        "LM27" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LM38" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LM47" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
-        "LM48" => '' ,
-        "LM51" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
-        "LM52" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)'
-    ) ;
-        
-?>
 
 <div id="proposal" style="float:left;" >
 
@@ -458,6 +543,9 @@ HERE;
   </ul>
 </div>
 
+<div style="clear:both;" ></div>
+
+<div id="status" style="float:right;" ></div>
 <div style="clear:both;" ></div>
 
 <?php
