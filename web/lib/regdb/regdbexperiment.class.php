@@ -578,7 +578,7 @@ class RegDBExperiment {
         
         $parameters['values']['general-spokesperson'] = \DataPortal\DataPortal::decorated_experiment_contact_info($this) ;
         $parameters['values']['general-title']        = $this->description() ;
-        
+    
         $parameters['attachments'] = $this->find_attachments_v() ;
 
         return $parameters ;

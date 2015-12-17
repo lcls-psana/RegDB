@@ -2,10 +2,14 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/urawi.class.php</file>
+        <group name="PCDS Web App">
+            <file>file://AFS/slac.stanford.edu/u/ec/gapon/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
         </group>
-        <group name="PCDS Web App"/>
-        <group name="PCDS Web Apps"/>
+        <group name="PCDS Web Apps">
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
+        </group>
+        <group>
+            <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_questionnaire.php</file>
+        </group>
     </open-files>
 </project-private>

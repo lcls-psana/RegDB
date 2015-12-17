@@ -782,6 +782,14 @@ HERE;
             $groups['xcscom12'] = True;
         }
 
+        /* MFX instrument
+         */
+        if( is_null( $instr ) || ( $instr == 'MFX' )) {
+            $groups['ps-mfx'] = True;
+            $groups['ps-mfx-sci'] = True;
+            $groups['ps-mfx-elog'] = True;
+        }
+
         /* Mobile rack experiments
          */
         if( is_null( $instr ) || ( $instr == 'MOB' )) {

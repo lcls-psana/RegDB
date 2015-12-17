@@ -27,7 +27,7 @@ class URAWIUser {
         $this->info = $info ;
     }
     public function name () {
-        if (is_null($this->fullName)) $this->fullName = "$this->info->firstName $this->info->lastName " ;
+        if (is_null($this->fullName)) $this->fullName = "{$this->info->firstName} {$this->info->lastName} " ;
         return $this->fullName ;
     }
 
@@ -77,19 +77,36 @@ class URAWIProposal {
     public function number     () { return $this->info->proposalNo ; }
     public function status     () { return $this->info->status ; }
     public function title      () { return $this->info->proposalTitle ; }
+    public function proposalAbstract () { return $this->info->proposalAbstract ; }
     public function approved   () { return $this->info->approved === 'yes' ; }
     public function instrument () { return $this->info->instrument ; }
 
     public function start () {
-        if (is_null($this->startDate)) $this->startDate = LusiTime::parse($this->info->startDate) ;
+        if (is_null($this->startDate)) {
+            if (isset($this->info->startDate)) {
+                $this->startDate = LusiTime::parse($this->info->startDate) ;
+            } else {
+                $this->startDate = LusiTime::parse('2016-03-24') ;
+            }
+        }
         return $this->startDate ;
     }
     public function stop () {
-        if (is_null($this->stopDate)) $this->stopDate = LusiTime::parse($this->info->stopDate) ;
+        if (is_null($this->stopDate)) {
+            if (isset($this->info->stopDate)) {
+                $this->stopDate = LusiTime::parse($this->info->stopDate) ;
+            } else {
+                $this->stopDate = LusiTime::parse('2016-03-25') ;
+            }
+        }
         return $this->stopDate ;
     }
     public function contact () {
-        if (is_null($this->spokesPerson)) $this->spokesPerson = new URAWIUser($this->info->spokesPerson) ;
+        if (is_null($this->spokesPerson)) {
+            if (isset($this->info->spokesPerson)) {
+                $this->spokesPerson = new URAWIUser($this->info->spokesPerson) ;
+            }
+        }
         return $this->spokesPerson ;
     }
     public function contact_email () {
@@ -99,13 +116,23 @@ class URAWIProposal {
     public function members () {
         if (is_null($this->collaborators)) {
             $this->collaborators = array() ;
-            foreach ($this->info->collaborators as $collaborator)
-                array_push($this->collaborators, new URAWIUser($collaborator)) ;
+            if (isset($this->info->collaborators)) {
+                foreach ($this->info->collaborators as $collaborator)
+                    array_push($this->collaborators, new URAWIUser($collaborator)) ;
+            }
         }
         return $this->collaborators ;
     }
-    public function posix_group () {
-        if (is_null($this->group)) $this->group = strtolower($this->info->instrument.substr($this->info->proposalNo, 1, 3).substr($this->info->startDate, 2, 2)) ;
+    public function posix_group ($startDate=null) {
+        if (is_null($this->group)) {
+            $this->group = strtolower($this->info->instrument.substr($this->info->proposalNo, 1, 3)) ;
+            $startDate = $this->info->startDate ? $this->info->startDate : $startDate ;
+            if ($startDate) {
+                $this->group .= substr($startDate, 2, 2) ;
+            } else {
+                $this->group .= '??' ;
+            }
+        }
         return $this->group ;
     }
     
@@ -133,7 +160,7 @@ class URAWI {
         return URAWI::$instance ;
     }
 
-    /// Data members
+    // Data members
 
     private $url_base = null ;
 
@@ -147,43 +174,52 @@ class URAWI {
     }
     
     
+    /**
+     * Return a sorted (by the start date) array of proposal numbers for
+     * the specified (if any) period of time.
+     *
+     * @param LusiTime $startDate
+     * @param LusiTime $stopDate
+     * @return array
+     * @throws RegDBException
+     */
     public function proposals ($startDate=null, $stopDate=null) {
-
-        // ATTENTION: The Web services are broken! Disable them for now.
-//        return array() ; ;
 
         $parameters = '' ;
         if (!is_null($startDate)) {
             if ($startDate instanceof LusiTime)
-                $parameters = ($parameters === '' ? '?' : '&') . $startDate->toStringDay() ;
+                $parameters = ($parameters === '' ? '?' : '&') . "startDate={$startDate->toStringDay()}" ;
             else
                 throw new RegDBException(__METHOD__, "invalid type of parameter 'startDate'") ;
         }
         if (!is_null($stopDate)) {
             if ($stopDate instanceof LusiTime)
-                $parameters = ($parameters === '' ? '?' : '&') . $stopDate->toStringDay() ;
+                $parameters = ($parameters === '' ? '?' : '&') . "stopDate={$stopDate->toStringDay()}" ;
             else
                 throw new RegDBException(__METHOD__, "invalid type of parameter 'stopDate'") ;
         }
 
         $result = array() ;
+        $url = "proposal_info{$parameters}" ;
+        $proposals_json = $this->request($url, null) ;
+        foreach ($proposals_json->proposals as $p) array_push($result, $p) ;
 
-        $proposals_json = $this->request("proposal_info{$parameters}", null) ;
-        foreach($proposals_json->proposals as $p)
-            array_push($result, $p->proposalNo) ;
+        // sort by the start date
+        usort($result, function ($a, $b) {
+            return strcmp($a->startDate, $b->startDate) ;
+        }) ;
+        $proposalNumbers = array() ;
+        foreach ($result as $p) array_push($proposalNumbers, $p->proposalNo) ;
 
-        return $result ;
+        return $proposalNumbers ;
     }
     
-    public function proposalInfo ($number) {
-
-        // ATTENTION: The Web services are broken! Disable them for now.
-//        throw new URAWINoProposalException() ;
+    public function proposalInfo ($number, $fetchProposalInfoMethod='btsr_info') {
 
         if (!is_string($number)) throw new RegDBException(__METHOD__, "invalid type of parameter 'number'") ;
         $number = strtoupper($number) ;
 
-        $url = "btsr_info?proposalNo={$number}" ;
+        $url = "{$fetchProposalInfoMethod}?proposalNo={$number}" ;
         $data_json = $this->request (
             $url ,
             function ($message) {
