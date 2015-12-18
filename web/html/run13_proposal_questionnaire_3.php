@@ -33,15 +33,14 @@ HERE;
 
     $experimentName = $info->posix_group('2016-03-24') ;
     $exper = $SVC->safe_assign(
-        $SVC->regdb()->find_experiment_by_unique_name($experimentName) ,
+        $SVC->regdb()->find_experiment_by_unique_name($info->posix_group()) ,
         "We're sorry - this proposal is not found in our system") ;
 
-    $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ;
-    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'reader') ;
     $SVC->assert(
-        $is_editor || $is_reader ,
+        $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ,
         "We're sorry - you're not authorized to view/modify this document") ;
 
+    
     $contacts = array (
         "LK85" => 'Roberto Alonso-Mori (robertoa@slac.stanford.edu' ,
         "LK86" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
@@ -318,19 +317,15 @@ table.standard > tbody td.unit {
     font-size:      16px;
     color:          #0071bc;
 }
-.xray-sect    .comments,
-.laser-sect   .comments,
-.control-sect .comments,
-.data-sect    .comments {
+.xray-sect    > .comments,
+.laser-sect   > .comments,
+.control-sect > .comments,
+.data-sect    > .comments {
     margin-left:    20px;
     margin-top:     15px;
     max-width:      720px;
     font-size:      13px;
 }
-.control-sect .comments .quote {
-    max-width:      560px;
-}
-
 .control-sect table,
 .data-sect    table {
     margin-top:     20px;
@@ -432,8 +427,6 @@ table.analysis > tbody td.instr {
 var proposal = '<?=$proposalNo?>' ;
 var exper_id = <?=$exper->id()?> ;
 
-var is_editor = <?=$is_editor ? 'true' : 'false'?> ;
-var is_reader = <?=$is_reader ? 'true' : 'false'?> ;
 
 function _pad (n) {
     return (n < 10 ? '0' : '') + n ;
@@ -507,30 +500,24 @@ function getProposalParameters (on_success) {
 $(function () {
     $('#tabs').tabs() ;
 
-    if (is_reader) {
-        $('select'  ).attr('disabled', 'disabled') ;
-        $('input'   ).attr('disabled', 'disabled') ;
-        $('textarea').attr('disabled', 'disabled') ;
-    } else {
-        $('select').change(function () {
-            var elem = $(this) ,
-                id   = elem.attr('id') ,
-                val  = elem.val() ;
-            saveProposalParameter(id, val) ;
-        }) ;
-        $('input').change(function () {
-            var elem = $(this) ,
-                id   = elem.attr('id') ,
-                val  = elem.val() ;
-            saveProposalParameter(id, val) ;
-        }) ;
-        $('textarea').change(function () {
-            var elem = $(this) ,
-                id   = elem.attr('id') ,
-                val  = elem.val() ;
-            saveProposalParameter(id, val) ;
-        }) ;
-    }
+    $('select').change(function () {
+        var elem = $(this) ,
+            id   = elem.attr('id') ,
+            val  = elem.val() ;
+        saveProposalParameter(id, val) ;
+    }) ;
+    $('input').change(function () {
+        var elem = $(this) ,
+            id   = elem.attr('id') ,
+            val  = elem.val() ;
+        saveProposalParameter(id, val) ;
+    }) ;
+    $('textarea').change(function () {
+        var elem = $(this) ,
+            id   = elem.attr('id') ,
+            val  = elem.val() ;
+        saveProposalParameter(id, val) ;
+    }) ;
     getProposalParameters(function (params) {
         var modified_time = 0 ,
             modified_uid  = '' ;
@@ -1723,17 +1710,9 @@ HERE;
         Do you have computers, requiring networking or other connections to LCLS,
         required to control devices or read out detectors?  If so, please give
         the following details.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-          <li><b>Connections supplied by LCLS</b> - List any connections you need such as network
-              connections, triggers, serial connection, etc.</li>
-          <li><b>Purpose</b> - describe what the host is needed for (ex: run a labview program
-              to control xxx-devices) and any special  needs such as NTP (network time protocol)
-              link, remote desktop link from control-room, EPICS channel-access gateway
-              configuration (for user-supplied IOC hosts), etc.</li>
-          </ul>
-        </div>
+         <div class="quote" >
+           Instructions to follow...
+         </div>
       </div>
       <table>
         <thead>
@@ -1782,7 +1761,7 @@ HERE;
          acquisition isn’t necessary, webcams or GigE cameras are generally sufficient;
          for beam-synchronous, triggered viewing, an Opal camera will be required.
          If recording to the data-stream is necessary, the camera should be included in
-         the DAQ section of this planning questionnaire.</p>
+         the DAQ section of this planning questionnaire.
          </div>
       </div>
       <textarea id="<?=$sect.'-cameras'?>" rows="12" cols="72"></textarea>
@@ -1797,7 +1776,6 @@ HERE;
   <option> newport </option>
   <option> pico </option>
   <option> piezo </option>
-  <option> TBD (not yet known) </option>
   <option> Other (specify in Purpose) </option>
 </select>
 HERE;
@@ -1828,22 +1806,11 @@ HERE;
     <div class="control-sect" >
       <h1>4. Motors</h1>
       <div class="comments">
-        LCLS supports various flavors of 2-phase stepper motors, Newport motors, Pico motors,
-        and Piezo motors.  Please fill out as much information as possible about your motion
-        needs in the table below.  Note that stages which are part of fixed beamline hardware
-        (ie: XPP detector robot arm stages) need not be quantified here; please list those that
-        are part of an ad hoc experimental configuration.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-            <li>Enter as much detail as possible. Finer details such as precision and range may
-                be determined during the detailed experiment planning effort.</li>
-            <li><b>Type</b> - Select the type of motor if you know it, or ‘TBD’ if the decision should be
-                deferred to the detailed planning effort.</li>
-            <li><b>Purpose</b> - Describe what the motorized stage will be used for (ie: 3-axis linear
-                sample positioning).</li>
-          </ul>
-        </div>
+          LCLS supports various flavors of 2-phase stepper motors, Newport motors, Pico motors,
+          and Piezo motors.  Please fill out as much information as possible about your motion
+          needs in the table below.  Note that stages which are part of fixed beamline hardware
+          (ie: XPP detector robot arm stages) need not be quantified here; please list those that
+          are part of an ad hoc experimental configuration.
       </div>
       <table>
         <thead>
@@ -1876,21 +1843,15 @@ HERE;
     <div class="control-sect" >
       <h1>5. Power supplies</h1>
       <div class="comments">
-        LCLS can provide several ranges of controlled high and low voltage DC power.
-        Please list your requirements.  If you have your own supplies which you will bring,
-        please list make and model, and a link to documentation & approving electrical
-        standards bodies.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-            <li>Note that user-supplied power supplies likely require electrical inspection
-                by a SLAC official, please plan this into your pre-experiment availability.</li>
-          </ul>
-        </div>
+          LCLS can provide several ranges of controlled high and low voltage DC power.
+          Please list your requirements.  If you have your own supplies which you will bring,
+          please list make and model, and a link to documentation & approving electrical
+          standards bodies.  Note that user-supplied power supplies likely require electrical
+          inspection by a SLAC official, please plan this into your pre-experiment availability.
       </div>
 
       <div class="control-subsect" >
-        <h2>Supplied by LCLS:</h2>
+        <h2>5.1 Supplied by LCLS:</h2>
         <table>
           <thead>
             <tr>
@@ -1912,21 +1873,7 @@ HERE;
       </div>
 
       <div class="control-subsect" >
-        <h2>Power supplies to be brought by USER</h2>
-        <div class="comments">
-          <div class="quote" >
-            Special instructions:
-            <ul>
-              <li><b>Voltage (or range), AC/DC</b> - What is the maximum output range and type for
-              the supply?</li>
-              <li><b>Input Voltage & Current</b> - What electrical supply do we need
-              to provide to power the supply?</li>
-              <li><b>Rating Agency</b> - List rating agency certifications (ie: NRTL, CSA, SLAC-EEIP, etc)
-              so we can determine if the equipment needs to be inspected upon arrival</li>
-              <li><b>Purpose</b> - Describe how and why the supply will be used in your experiment</li>
-            </ul>
-          </div>
-        </div>
+        <h2>5.2 Power supplies to be brought by USER</h2>
         <table>
           <thead>
             <tr>
@@ -1967,24 +1914,12 @@ HERE;
     </div>
 
     <div class="control-sect" >
-      <h1>7. Other USER Supplied Controlled Devices</h1>
+      <h1>7. Other Outside Controlled Devices</h1>
       <div class="comments">
-        Please enumerate all other devices you will bring which require remotely controlled
-        interfaces or readback into a monitoring interface or the data acquisition system.
-        Also any devices which are not NRTL listed and require inspection by a SLAC electrical
-        safety officer.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-            <li><b>Interfaces</b> - List the required control interface (ie: RS233, USB, ethernet,
-                timing trigger, analog or digital I/O, etc.)</li>
-            <li><b>Documentation Link</b> - WWW URL, if available, to help us determine effort
-                to support the device</li>
-            <li><b>Purpose, special requests</b> - Describe what the device is for and why it is
-                necessary, also describe any support needs (ex: read 0-10V analog output into
-                the data stream @ 120Hz, etc.)</li>
-          </ul>
-        </div>
+          Please enumerate all other devices you will bring which require remotely controlled
+          interfaces or readback into a monitoring interface or the data acquisition system.
+          Also any devices which are not NRTL listed and require inspection by a SLAC electrical
+          safety officer.
       </div>
       <table>
         <thead>

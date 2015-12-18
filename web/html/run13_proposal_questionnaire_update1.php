@@ -33,15 +33,14 @@ HERE;
 
     $experimentName = $info->posix_group('2016-03-24') ;
     $exper = $SVC->safe_assign(
-        $SVC->regdb()->find_experiment_by_unique_name($experimentName) ,
+        $SVC->regdb()->find_experiment_by_unique_name($info->posix_group()) ,
         "We're sorry - this proposal is not found in our system") ;
 
-    $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ;
-    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'reader') ;
     $SVC->assert(
-        $is_editor || $is_reader ,
+        $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ,
         "We're sorry - you're not authorized to view/modify this document") ;
 
+    
     $contacts = array (
         "LK85" => 'Roberto Alonso-Mori (robertoa@slac.stanford.edu' ,
         "LK86" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
@@ -139,7 +138,6 @@ body {
 #comments {
     padding:        20px;
     padding-bottom:  5px;
-    max-width:      640px;
 /*    border-top:     solid 1px #c0c0c0;*/
 /*    border-left:    solid 1px #c0c0c0;*/
 
@@ -301,8 +299,7 @@ table.standard > tbody td.unit {
 }
 
 
-.xray-sect,
-.laser-sect,
+
 .control-sect,
 .data-sect {
     margin-bottom:  5px;
@@ -318,19 +315,13 @@ table.standard > tbody td.unit {
     font-size:      16px;
     color:          #0071bc;
 }
-.xray-sect    .comments,
-.laser-sect   .comments,
-.control-sect .comments,
-.data-sect    .comments {
+.control-sect > .comments,
+.data-sect    > .comments {
     margin-left:    20px;
     margin-top:     15px;
     max-width:      720px;
     font-size:      13px;
 }
-.control-sect .comments .quote {
-    max-width:      560px;
-}
-
 .control-sect table,
 .data-sect    table {
     margin-top:     20px;
@@ -432,8 +423,6 @@ table.analysis > tbody td.instr {
 var proposal = '<?=$proposalNo?>' ;
 var exper_id = <?=$exper->id()?> ;
 
-var is_editor = <?=$is_editor ? 'true' : 'false'?> ;
-var is_reader = <?=$is_reader ? 'true' : 'false'?> ;
 
 function _pad (n) {
     return (n < 10 ? '0' : '') + n ;
@@ -507,30 +496,24 @@ function getProposalParameters (on_success) {
 $(function () {
     $('#tabs').tabs() ;
 
-    if (is_reader) {
-        $('select'  ).attr('disabled', 'disabled') ;
-        $('input'   ).attr('disabled', 'disabled') ;
-        $('textarea').attr('disabled', 'disabled') ;
-    } else {
-        $('select').change(function () {
-            var elem = $(this) ,
-                id   = elem.attr('id') ,
-                val  = elem.val() ;
-            saveProposalParameter(id, val) ;
-        }) ;
-        $('input').change(function () {
-            var elem = $(this) ,
-                id   = elem.attr('id') ,
-                val  = elem.val() ;
-            saveProposalParameter(id, val) ;
-        }) ;
-        $('textarea').change(function () {
-            var elem = $(this) ,
-                id   = elem.attr('id') ,
-                val  = elem.val() ;
-            saveProposalParameter(id, val) ;
-        }) ;
-    }
+    $('select').change(function () {
+        var elem = $(this) ,
+            id   = elem.attr('id') ,
+            val  = elem.val() ;
+        saveProposalParameter(id, val) ;
+    }) ;
+    $('input').change(function () {
+        var elem = $(this) ,
+            id   = elem.attr('id') ,
+            val  = elem.val() ;
+        saveProposalParameter(id, val) ;
+    }) ;
+    $('textarea').change(function () {
+        var elem = $(this) ,
+            id   = elem.attr('id') ,
+            val  = elem.val() ;
+        saveProposalParameter(id, val) ;
+    }) ;
     getProposalParameters(function (params) {
         var modified_time = 0 ,
             modified_uid  = '' ;
@@ -581,12 +564,11 @@ $(function () {
 </div>
 
 <div id="comments"  style="float:right;">
-  <b>INSTRUCTIONS:</b>
+  <b>FORM INSTRUCTION:</b>
   <ul>
-    <li>Please fill this form in collaboration with the LCLS point of contact for your experiment.</li>
+    <li>This Web form represents a final questionnaire for the Run 13 LCLS proposals</li>
     <li>All your modifications will be automatically recorded in a database as you'll be making them</li>
-    <li>The input must be provided before a deadline of <span class="important">2016-01-15</span> after
-        which further changes of the experimental requirements will require LCLC Management approval</li>
+    <li>The input must be provided before <span class="important">2016-01-15</span></li>
   </ul>
 </div>
 
@@ -611,14 +593,11 @@ HERE;
     $instr_select = "Select from Pull-down Menu" ;
     $instr_manual = "Enter manually" ;
 
-    function yes_no ($id, $yes=false) {
-        $selected = 'selected="selected"' ;
-        $yes_selected = $yes ? $selected : '' ;
-        $no_selected  = $yes ? ''        : $selected ;
+    function yes_no ($id) {
         $str =<<<HERE
 <select id="{$id}" >
-  <option {$yes_selected} > Yes </option>
-  <option {$no_selected} > No </option>
+  <option                     > Yes </option>
+  <option selected="selected" > No </option>
 </select>
 HERE;
         return $str ;
@@ -745,8 +724,8 @@ HERE;
 
   <ul>
     <li><a href="#xray"  >X-rays</a></li>
-    <li><a href="#laser" >Optical Laser</a></li>
-    <li><a href="#env"   >Setup and Sample</a></li>
+    <li><a href="#laser" >Pump Laser</a></li>
+    <li><a href="#env"   >Endstation & Sample Environment</a></li>
     <li><a href="#contr" >Controls</a></li>
     <li><a href="#data"  >DAQ & Analysis</a></li>
   </ul>
@@ -756,28 +735,20 @@ HERE;
 ?>
   
   <div id="xray" >
-    <div class="xray-sect" >
-      <div class="comments">
-        This section covers the basic X-ray FEL operation mode, beam parameters,
-        X-ray beamline optics requirement. Most standard parameters can be chosen
-        from a drop down menu.  If the desired configurations are not list, please
-        describe with more details in the ‘additional information’ field.
-      </div>
-    </div>
     <table class="standard" >
       <?=$thead?>
       <tbody>
         <tr>
           <td class="item item_group noborder"  >Standard Configuration</td>
           <td class="prio            noborder"  >&nbsp;</td>
-          <td class="val"   ><?=yes_no($sect.'-standard', true)?></td>
+          <td class="val"   ><?=yes_no($sect.'-standard')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" ><?=$instr_select?></td>
         </tr>
         <tr>
           <td class="item item_group noborder"  >Multiplexed</td>
           <td class="prio            noborder"  >&nbsp;</td>
-          <td class="val"   ><?=yes_no($sect.'-multiplex', true)?></td>
+          <td class="val"   ><?=yes_no($sect.'-multiplex')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" ><?=$instr_select?></td>
         </tr>
@@ -801,7 +772,7 @@ HERE;
           <td class="prio         <?=$extra?>" ><?=$i?></td>
           <td class="val                     " ><?=input($sect.'-energy-'.$i)?></td>
           <td class="unit         <?=$extra?>" ><?=($i === 1 ? "eV" : "&nbsp;")?></td>
-          <td class="instr        <?=$extra?>" ><?=($i === 1 ? $instr_manual.' in the order of priority' : "&nbsp;")?></td>
+          <td class="instr        <?=$extra?>" ><?=($i === 1 ? $instr_manual : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
@@ -817,7 +788,7 @@ HERE;
           <td class="prio  <?=$extra?>" ><?=$i?></td>
           <td class="val"               ><?=input($sect.'-pulse-'.$i)?></td>
           <td class="unit  <?=$extra?>" ><?=($i === 1 ? "fs" : "&nbsp;")?></td>
-          <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_manual." in the order of priority" : "&nbsp;")?></td>
+          <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_manual : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
@@ -836,7 +807,7 @@ HERE;
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder"     ><?=($i === 1 ? "X-ray spot size (FWHM)" : "&nbsp;")?></td>
+          <td class="item item_group noborder"     ><?=($i === 1 ? "FWHM X-ray Focal Spot Sizes" : "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
           <td class="val"               ><?=input($sect.'-focal-'.$i)?></td>
           <td class="unit  <?=$extra?>" ><?=($i === 1 ? "um" : "&nbsp;")?></td>
@@ -876,16 +847,16 @@ HERE;
         <tr>
           <td class="item item_group noborder"  >Monochromator</td>
           <td class="prio            noborder"  >&nbsp;</td>
-          <td class="val"   ><?=yes_no($sect.'-monochrom', true)?></td>
+          <td class="val"   ><?=yes_no($sect.'-monochrom')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" ><?=$instr_select?></td>
         </tr>
         <tr>
-          <td class="item  border1"  >Bandwidth</td>
-          <td class="prio  border1"  >&nbsp;</td>
-          <td class="val   border1"   ><?=input($sect.'-bandwidth')?></td>
-          <td class="unit  border1"  >eV</td>
-          <td class="instr border1" ><?=$instr_manual.' if a mono is needed.'?></td>
+          <td class="item item_group border1"  >Bandwidth</td>
+          <td class="prio            border1"  >&nbsp;</td>
+          <td class="val             border1"   ><?=input($sect.'-bandwidth')?></td>
+          <td class="unit            border1"  >eV</td>
+          <td class="instr           border1" ><?=$instr_manual?></td>
         </tr>
         <tr>
           <td class="item item_group noborder"  >Energy Scanning</td>
@@ -908,7 +879,7 @@ HERE;
           <td class="prio  <?=$extra?> <?=$border1?>" ><?=$i?></td>
           <td class="val               <?=$border1?>" ><?=input($sect.'-energyscan-'.$i)?></td>
           <td class="unit  <?=$extra?> <?=$border1?>" ><?=($i === 1 ? "eV" : "&nbsp;")?></td>
-          <td class="instr <?=$extra?> <?=$border1?>" ><?=($i === 1 ? $instr_manual.'. E.g., 7000-7050 eV' : "&nbsp;")?></td>
+          <td class="instr <?=$extra?> <?=$border1?>" ><?=($i === 1 ? $instr_manual : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
@@ -925,20 +896,116 @@ HERE;
           <td class="unit  border1"  >&nbsp;</td>
           <td class="instr border1" >If Other, describe</td>
         </tr>
+<?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item  item_group border1" >Other X-ray Requirements</td>
-          <td class="prio             border1" >&nbsp;</td>
-          <td class="val              border1" ><?=textarea($sect.'-other')?></td>
-          <td class="unit             border1" >&nbsp;</td>
-          <td class="instr            border1" >Please list and describe additional requirements for
-                                                the x-ray parameters and x-ray optics, etc.</td>
+          <td class="item item_group noborder"     ><?=($i === 1 ? "X-ray Techniques to be Used" : "&nbsp;")?></td>
+          <td class="prio  <?=$extra?>" ><?=$i?></td>
+          <td class="val"               ><?=xray_techniques($sect.'-tech-'.$i)?></td>
+          <td class="unit  <?=$extra?>" >&nbsp;</td>
+          <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item noborder"  >↳ Coincidence Required?</td>
+          <td class="prio"  >&nbsp;</td>
+          <td class="val"   ><?=yes_no($sect.'-tech-coincidence')?></td>
+          <td class="unit"  >&nbsp;</td>
+          <td class="instr" ><?=$instr_select?></td>
+        </tr>
+        <tr>
+          <td class="item noborder"  >&nbsp;</td>
+          <td class="prio noborder"  >&nbsp;</td>
+          <td class="val"   ><?=textarea($sect.'-tech-other')?></td>
+          <td class="unit"  >&nbsp;</td>
+          <td class="instr" >If Other, describe</td>
+        </tr>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=textarea($sect.'-tech-descr')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="instr border1" >Describe reason for multiple techniques, coincidence and prioritization</td>
+        </tr>
+        <tr>
+          <td class="item  item_group noborder" >Desired Minimum Resolution</td>
+          <td class="prio             noborder" >&nbsp;</td>
+          <td class="val"                       ><?=input($sect.'-minres')?></td>
+          <td class="unit             noborder" >A</td>
+          <td class="instr            noborder" ><?=$instr_manual?></td>
+        </tr>
+        <tr>
+          <td class="item  border1" >Desired Maximum Resolution</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-maxres')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="item  item_group noborder" >Desired Minimum Q-value</td>
+          <td class="prio  noborder" >&nbsp;</td>
+          <td class="val"            ><?=input($sect.'-minqval')?></td>
+          <td class="unit  noborder" >A<sup>-1</sup></td>
+          <td class="instr noborder" ><?=$instr_manual?></td>
+        </tr>
+        <tr>
+          <td class="item  border1" >Desired Maximum Q-value</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-maxqval')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="item  item_group noborder" >Minimum Sample-Detector Distance</td>
+          <td class="prio             noborder" >&nbsp;</td>
+          <td class="val"                       ><?=input($sect.'-mindist')?></td>
+          <td class="unit             noborder" >mm</td>
+          <td class="instr            noborder" ><?=$instr_manual?></td>
+        </tr>
+        <tr>
+          <td class="item  border1" >Desired Maximum Distance</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-maxdist')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+<?php for ($i = 1; $i <= 9; $i++) { ?>
+        <tr>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "Other X-ray Requirements" : "&nbsp;")?></td>
+          <td class="prio             noborder" >&nbsp;</td>
+          <td class="val"                       ><?=input($sect.'-other-'.$i)?></td>
+          <td class="unit             noborder" >&nbsp;</td>
+          <td class="instr            noborder" ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-other-10')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="inst border1r" >&nbsp;</td>
+        </tr>
+<?php for ($i = 1; $i <= 9; $i++) { ?>
+        <tr>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-supplied Equipment" : "&nbsp;")?></td>
+          <td class="prio             noborder" >&nbsp;</td>
+          <td class="val"                       ><?=input($sect.'-userequip-'.$i)?></td>
+          <td class="unit             noborder" >&nbsp;</td>
+          <td class="instr            noborder" ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item"  >&nbsp;</td>
+          <td class="prio"  >&nbsp;</td>
+          <td class="val"   ><?=input($sect.'-userequip-10')?></td>
+          <td class="unit"  >&nbsp;</td>
+          <td class="instr" >&nbsp;</td>
         </tr>
       </tbody>
     </table>
   </div>
 
 <?php
-        function optical_laser_needed ($id) {
+        function pump_laser_needed ($id) {
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
@@ -953,7 +1020,7 @@ HERE;
 HERE;
             return $str ;
         }
-        function optical_laser_advanced ($id) {
+        function pump_laser_advanced ($id) {
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
@@ -965,7 +1032,7 @@ HERE;
 HERE;
             return $str ;
         }
-        function optical_laser_wavelength ($id) {
+        function pump_laser_wavelength ($id) {
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
@@ -983,7 +1050,7 @@ HERE;
 HERE;
             return $str ;
         }
-        function optical_laser_pulse_duration ($id) {
+        function pump_laser_pulse_duration ($id) {
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
@@ -1003,21 +1070,13 @@ HERE;
 ?>
     
   <div id="laser" >
-    <div class="laser-sect" >
-      <div class="comments">
-        This page covers basic optical laser parameters. Most standard options
-        can be chosen from the drop down menu. If the desired configurations
-        or parameters are not listed, please describe with more details in
-        the ‘additional information’ field.
-      </div>
-    </div>
     <table class="standard" >
       <?=$thead?>
       <tbody>
         <tr>
-          <td class="item item_group noborder" >Optical Laser Needed </td>
+          <td class="item item_group noborder" >Pump Laser Needed </td>
           <td class="prio noborder"            >&nbsp;</td>
-          <td class="val"                      ><?=optical_laser_needed($sect.'-mode')?></td>
+          <td class="val"                      ><?=pump_laser_needed($sect.'-mode')?></td>
           <td class="unit"                     >&nbsp;</td>
           <td class="instr"                    ><?=$instr_select?></td>
         </tr>
@@ -1031,7 +1090,7 @@ HERE;
         <tr>
           <td class="item item_group noborder" >Advanced </td>
           <td class="prio noborder"            >&nbsp;</td>
-          <td class="val"                      ><?=optical_laser_advanced($sect.'-adv')?></td>
+          <td class="val"                      ><?=pump_laser_advanced($sect.'-adv')?></td>
           <td class="unit"                     >&nbsp;</td>
           <td class="instr"                    ><?=$instr_select?></td>
         </tr>
@@ -1060,7 +1119,7 @@ HERE;
         <tr>
           <td class="item item_group noborder" ><?=($i === 1 ? "Wavelength" : "&nbsp;")?></td>
           <td class="prio         <?=$extra?>" ><?=$i?></td>
-          <td class="val"                      ><?=optical_laser_wavelength($sect.'-wavelength-'.$i)?></td>
+          <td class="val"                      ><?=pump_laser_wavelength($sect.'-wavelength-'.$i)?></td>
           <td class="unit         <?=$extra?>" >&nbsp;</td>
           <td class="instr        <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
         </tr>
@@ -1091,7 +1150,7 @@ HERE;
 <?php } ?>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder" ><?=($i === 1 ? "X-ray spot size (FWHM)" : "&nbsp;")?></td>
+          <td class="item item_group noborder" ><?=($i === 1 ? "FWHM Spot Size" : "&nbsp;")?></td>
           <td class="prio         <?=$extra?>" ><?=$i?></td>
           <td class="val"                      ><?=input($sect.'-spot-'.$i)?></td>
           <td class="unit         <?=$extra?>" ><?=($i === 1 ? "um" : "&nbsp;")?></td>
@@ -1125,7 +1184,7 @@ HERE;
         <tr>
           <td class="item item_group noborder" ><?=($i === 1 ? "Pulse Duration (approx)" : "&nbsp;")?></td>
           <td class="prio         <?=$extra?>" ><?=$i?></td>
-          <td class="val"                      ><?=optical_laser_pulse_duration($sect.'-duration-'.$i)?></td>
+          <td class="val"                      ><?=pump_laser_pulse_duration($sect.'-duration-'.$i)?></td>
           <td class="unit         <?=$extra?>" >&nbsp;</td>
           <td class="instr        <?=$extra?>" ><?=($i === 1 ? $instr_select: "&nbsp;")?></td>
         </tr>
@@ -1192,7 +1251,7 @@ HERE;
         </tr>
 
 <?php
-        function optical_laser_geometry ($id) {
+        function pump_laser_geometry ($id) {
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
@@ -1209,7 +1268,7 @@ HERE;
         <tr>
           <td class="item item_group noborder" ><?=($i === 1 ? "Pump Laser Geometry" :  "&nbsp;")?></td>
           <td class="prio         <?=$extra?>" ><?=$i?></td>
-          <td class="val"                      ><?=optical_laser_geometry($sect.'-geom-'.$i)?></td>
+          <td class="val"                      ><?=pump_laser_geometry($sect.'-geom-'.$i)?></td>
           <td class="unit         <?=$extra?>" >&nbsp;</td>
           <td class="instr        <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
         </tr>
@@ -1389,77 +1448,7 @@ HERE;
         }
 
 ?>
-<?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
-        <tr>
-          <td class="item item_group noborder"     ><?=($i === 1 ? "X-ray Techniques to be Used" : "&nbsp;")?></td>
-          <td class="prio  <?=$extra?>" ><?=$i?></td>
-          <td class="val"               ><?=xray_techniques($sect.'-tech-'.$i)?></td>
-          <td class="unit  <?=$extra?>" >&nbsp;</td>
-          <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
-        </tr>
-<?php } ?>
-        <tr>
-          <td class="item noborder"  >&nbsp;</td>
-          <td class="prio noborder"  >&nbsp;</td>
-          <td class="val"   ><?=textarea($sect.'-tech-other')?></td>
-          <td class="unit"  >&nbsp;</td>
-          <td class="instr" >If Other, describe</td>
-        </tr>
-        <tr>
-          <td class="item  border1" >&nbsp;</td>
-          <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-tech-descr')?></td>
-          <td class="unit  border1" >&nbsp;</td>
-          <td class="instr border1" >Describe reason for multiple techniques and prioritization</td>
-        </tr>
-        <tr>
-          <td class="item item_group noborder" >Scattering geometry</td>
-          <td class="prio            "  >&nbsp;</td>
-          <td class="val"   >&nbsp;</td>
-          <td class="unit"  >&nbsp;</td>
-          <td class="instr" >&nbsp;</td>
-        </tr>        <tr>
-          <td class="item   noborder" >Desired Minimum Resolution</td>
-          <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-minres')?></td>
-          <td class="unit             noborder" >A</td>
-          <td class="instr            noborder" ><?=$instr_manual?></td>
-        </tr>
-        <tr>
-          <td class="item  noborder" >↳ Maximum Resolution</td>
-          <td class="prio  " >&nbsp;</td>
-          <td class="val   " ><?=input($sect.'-maxres')?></td>
-          <td class="unit  " >&nbsp;</td>
-          <td class="instr " >&nbsp;</td>
-        </tr>
-        <tr>
-          <td class="item  noborder" >Desired Minimum Q-value</td>
-          <td class="prio  noborder" >&nbsp;</td>
-          <td class="val"            ><?=input($sect.'-minqval')?></td>
-          <td class="unit  noborder" >A<sup>-1</sup></td>
-          <td class="instr noborder" ><?=$instr_manual?></td>
-        </tr>
-        <tr>
-          <td class="item  noborder" >↳ Maximum Q-value</td>
-          <td class="prio  " >&nbsp;</td>
-          <td class="val   " ><?=input($sect.'-maxqval')?></td>
-          <td class="unit  " >&nbsp;</td>
-          <td class="instr border1" >&nbsp;</td>
-        </tr>
-        <tr>
-          <td class="item  noborder" >Desired Minimum Sample-Detector Distance</td>
-          <td class="prio  noborder" >&nbsp;</td>
-          <td class="val"            ><?=input($sect.'-mindist')?></td>
-          <td class="unit  noborder" >mm</td>
-          <td class="instr noborder" ><?=$instr_manual?></td>
-        </tr>
-        <tr>
-          <td class="item  border1" >↳ Maximum Distance</td>
-          <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=input($sect.'-maxdist')?></td>
-          <td class="unit  border1" >&nbsp;</td>
-          <td class="instr border1" >&nbsp;</td>
-        </tr>
+
 <?php for ($i = 1; $i <= 3; $i++) { $extra = $i < 3 ? "noborder" : "" ; ?>
         <tr>
           <td class="item item_group noborder"     ><?=($i === 1 ? "Specific Endstation" :  "&nbsp;")?></td>
@@ -1482,22 +1471,6 @@ HERE;
           <td class="val   border1" ><?=textarea($sect.'-endstation-decsr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Describe reason for multiple needs and prioritization</td>
-        </tr>
-<?php for ($i = 1; $i <= 9; $i++) { ?>
-        <tr>
-          <td class="item  item_group noborder" ><?=($i === 1 ? "Samples" : "&nbsp;")?></td>
-          <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-userequip-'.$i)?></td>
-          <td class="unit             noborder" >&nbsp;</td>
-          <td class="instr            noborder" ><?=($i === 1 ? "List all samples you intent to measure during your beamline" : "&nbsp;")?></td>
-        </tr>
-<?php } ?>
-        <tr>
-          <td class="item"  >&nbsp;</td>
-          <td class="prio"  >&nbsp;</td>
-          <td class="val"   ><?=input($sect.'-userequip-10')?></td>
-          <td class="unit"  >&nbsp;</td>
-          <td class="instr" >&nbsp;</td>
         </tr>
         <tr>
           <td class="item item_group noborder" >Sample Environment</td>
@@ -1651,7 +1624,7 @@ HERE;
         </tr>
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
-          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Equipment" : "&nbsp;")?></td>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Sample Env" : "&nbsp;")?></td>
           <td class="prio  noborder" >&nbsp;</td>
           <td class="val"            ><?=input($sect.'-userenv-'.$i)?></td>
           <td class="unit  noborder" >&nbsp;</td>
@@ -1723,17 +1696,9 @@ HERE;
         Do you have computers, requiring networking or other connections to LCLS,
         required to control devices or read out detectors?  If so, please give
         the following details.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-          <li><b>Connections supplied by LCLS</b> - List any connections you need such as network
-              connections, triggers, serial connection, etc.</li>
-          <li><b>Purpose</b> - describe what the host is needed for (ex: run a labview program
-              to control xxx-devices) and any special  needs such as NTP (network time protocol)
-              link, remote desktop link from control-room, EPICS channel-access gateway
-              configuration (for user-supplied IOC hosts), etc.</li>
-          </ul>
-        </div>
+         <div class="quote" >
+           Instructions to follow...
+         </div>
       </div>
       <table>
         <thead>
@@ -1782,7 +1747,7 @@ HERE;
          acquisition isn’t necessary, webcams or GigE cameras are generally sufficient;
          for beam-synchronous, triggered viewing, an Opal camera will be required.
          If recording to the data-stream is necessary, the camera should be included in
-         the DAQ section of this planning questionnaire.</p>
+         the DAQ section of this planning questionnaire.
          </div>
       </div>
       <textarea id="<?=$sect.'-cameras'?>" rows="12" cols="72"></textarea>
@@ -1797,7 +1762,6 @@ HERE;
   <option> newport </option>
   <option> pico </option>
   <option> piezo </option>
-  <option> TBD (not yet known) </option>
   <option> Other (specify in Purpose) </option>
 </select>
 HERE;
@@ -1828,22 +1792,11 @@ HERE;
     <div class="control-sect" >
       <h1>4. Motors</h1>
       <div class="comments">
-        LCLS supports various flavors of 2-phase stepper motors, Newport motors, Pico motors,
-        and Piezo motors.  Please fill out as much information as possible about your motion
-        needs in the table below.  Note that stages which are part of fixed beamline hardware
-        (ie: XPP detector robot arm stages) need not be quantified here; please list those that
-        are part of an ad hoc experimental configuration.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-            <li>Enter as much detail as possible. Finer details such as precision and range may
-                be determined during the detailed experiment planning effort.</li>
-            <li><b>Type</b> - Select the type of motor if you know it, or ‘TBD’ if the decision should be
-                deferred to the detailed planning effort.</li>
-            <li><b>Purpose</b> - Describe what the motorized stage will be used for (ie: 3-axis linear
-                sample positioning).</li>
-          </ul>
-        </div>
+          LCLS supports various flavors of 2-phase stepper motors, Newport motors, Pico motors,
+          and Piezo motors.  Please fill out as much information as possible about your motion
+          needs in the table below.  Note that stages which are part of fixed beamline hardware
+          (ie: XPP detector robot arm stages) need not be quantified here; please list those that
+          are part of an ad hoc experimental configuration.
       </div>
       <table>
         <thead>
@@ -1876,21 +1829,15 @@ HERE;
     <div class="control-sect" >
       <h1>5. Power supplies</h1>
       <div class="comments">
-        LCLS can provide several ranges of controlled high and low voltage DC power.
-        Please list your requirements.  If you have your own supplies which you will bring,
-        please list make and model, and a link to documentation & approving electrical
-        standards bodies.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-            <li>Note that user-supplied power supplies likely require electrical inspection
-                by a SLAC official, please plan this into your pre-experiment availability.</li>
-          </ul>
-        </div>
+          LCLS can provide several ranges of controlled high and low voltage DC power.
+          Please list your requirements.  If you have your own supplies which you will bring,
+          please list make and model, and a link to documentation & approving electrical
+          standards bodies.  Note that user-supplied power supplies likely require electrical
+          inspection by a SLAC official, please plan this into your pre-experiment availability.
       </div>
 
       <div class="control-subsect" >
-        <h2>Supplied by LCLS:</h2>
+        <h2>5.1 Supplied by LCLS:</h2>
         <table>
           <thead>
             <tr>
@@ -1912,21 +1859,7 @@ HERE;
       </div>
 
       <div class="control-subsect" >
-        <h2>Power supplies to be brought by USER</h2>
-        <div class="comments">
-          <div class="quote" >
-            Special instructions:
-            <ul>
-              <li><b>Voltage (or range), AC/DC</b> - What is the maximum output range and type for
-              the supply?</li>
-              <li><b>Input Voltage & Current</b> - What electrical supply do we need
-              to provide to power the supply?</li>
-              <li><b>Rating Agency</b> - List rating agency certifications (ie: NRTL, CSA, SLAC-EEIP, etc)
-              so we can determine if the equipment needs to be inspected upon arrival</li>
-              <li><b>Purpose</b> - Describe how and why the supply will be used in your experiment</li>
-            </ul>
-          </div>
-        </div>
+        <h2>5.2 Power supplies to be brought by USER</h2>
         <table>
           <thead>
             <tr>
@@ -1967,24 +1900,12 @@ HERE;
     </div>
 
     <div class="control-sect" >
-      <h1>7. Other USER Supplied Controlled Devices</h1>
+      <h1>7. Other Outside Controlled Devices</h1>
       <div class="comments">
-        Please enumerate all other devices you will bring which require remotely controlled
-        interfaces or readback into a monitoring interface or the data acquisition system.
-        Also any devices which are not NRTL listed and require inspection by a SLAC electrical
-        safety officer.
-        <div class="quote" >
-          Special instructions:
-          <ul>
-            <li><b>Interfaces</b> - List the required control interface (ie: RS233, USB, ethernet,
-                timing trigger, analog or digital I/O, etc.)</li>
-            <li><b>Documentation Link</b> - WWW URL, if available, to help us determine effort
-                to support the device</li>
-            <li><b>Purpose, special requests</b> - Describe what the device is for and why it is
-                necessary, also describe any support needs (ex: read 0-10V analog output into
-                the data stream @ 120Hz, etc.)</li>
-          </ul>
-        </div>
+          Please enumerate all other devices you will bring which require remotely controlled
+          interfaces or readback into a monitoring interface or the data acquisition system.
+          Also any devices which are not NRTL listed and require inspection by a SLAC electrical
+          safety officer.
       </div>
       <table>
         <thead>
@@ -2113,9 +2034,9 @@ HERE;
     function data_primary_location ($id) {
         $str =<<<HERE
 <select id="{$id}" >
+  <option> Your home institution </option>
   <option> LCLS/SLAC </option>
   <option> NERSC </option>
-  <option> Your home institution </option>
 </select>
 HERE;
         return $str ;
@@ -2279,10 +2200,10 @@ HERE;
     </div>
 
     <div class="data-sect" >
-      <h1>3. Offline Analysis</h1>
+      <h1>2. Offline Analysis</h1>
       <div class="comments">
-        <p>The <b>psana-python</b> toolkit may also be used to analyze the data once
-        they have been written to disk.  It has the advantage that the same code works 
+        <p>The <b>psana-python</b> toolkit may also be used to analyze the data once it 
+        has been written to disk.  It has the advantage that the same code works 
         for online/offline analysis allowing you to do your entire analysis 
         chain with one tool.   It allows access to calibrated image and supports 
         fast parallel processing of data using <b>MPI</b>-parallelization.  If you wish 
