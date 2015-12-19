@@ -37,21 +37,21 @@ HERE;
         "We're sorry - this proposal is not found in our system") ;
 
     $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ;
-    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'reader') ;
+    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Reader') ;
     $SVC->assert(
         $is_editor || $is_reader ,
         "We're sorry - you're not authorized to view/modify this document") ;
 
     $contacts = array (
-        "LK85" => 'Roberto Alonso-Mori (robertoa@slac.stanford.edu' ,
+        "LK85" => 'Roberto Alonso-Mori (robertoa@slac.stanford.edu)' ,
         "LK86" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
         "LK88" => 'Aquila, Andy (aquila@slac.stanford.edu)' ,
         "LK89" => 'Ray, Dipanwita (dray@slac.stanford.edu)' ,
-        "LK96" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LK96" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LK99" => 'Ray, Dipanwita (dray@slac.stanford.edu)' ,
         "LL02" => 'Hunter, Mark Steven (mhunter2@slac.stanford.edu)' ,
         "LL04" => 'Marcin Sikorski(sikorski@slac.stanford.edu)' ,
-        "LL05" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LL05" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LL09" => 'Osipov, Timur (tyosipov@slac.stanford.edu)' ,
         "LL13" => 'Diling Zhu (dlzhu@slac.stanford.edu)' ,
         "LL14" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
@@ -71,11 +71,12 @@ HERE;
         "LL44" => 'Matthieu Chollet (mchollet@slac.stanford.edu)' ,
         "LL48" => 'Sanghoon Song (sanghoon@slac.stanford.edu)' ,
         "LL58" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
-        "LL71" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LL71" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LL72" => 'Dakovski, Georgi L. (dakovski@slac.stanford.edu)' ,
+        "LL74" => 'Roberto Alonso-Mori (robertoa@slac.stanford.edu)' ,
         "LL78" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
         "LL82" => 'Nagler, Bob (bnagler@slac.stanford.edu)' ,
-        "LL84" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LL84" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LL86" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
         "LL94" => 'Osipov, Timur (tyosipov@slac.stanford.edu)' ,
         "LM01" => 'Diling Zhu (dlzhu@slac.stanford.edu)' ,
@@ -90,10 +91,10 @@ HERE;
         "LM23" => 'Osipov, Timur (tyosipov@slac.stanford.edu)' ,
         "LM27" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
         "LM38" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
-        "LM47" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
+        "LM47" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LM48" => 'Sanghoon Song (sanghoon@slac.stanford.edu)' ,
-        "LM51" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)' ,
-        "LM52" => 'Boutet, Sebastie (sboutet@slac.stanford.edu)'
+        "LM51" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
+        "LM52" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)'
     ) ;
         
 ?>
@@ -275,7 +276,7 @@ table.standard td.unit {
     text-align:     center;
 }
 table.standard td.instr {
-    width:  40%;
+    width:  25%;
 }
 table.standard > tbody td.item {
     color:  #0071bc;
@@ -292,6 +293,9 @@ table.standard > tbody td.item {
 }
 table.standard > tbody td.prio {
     font-weight:    bold;
+}
+table.standard > tbody td.val {
+    width:  50%;
 }
 table.standard > tbody td.val > input {
     text-align:     left;
@@ -320,6 +324,7 @@ table.standard > tbody td.unit {
 }
 .xray-sect    .comments,
 .laser-sect   .comments,
+.env-sect     .comments,
 .control-sect .comments,
 .data-sect    .comments {
     margin-left:    20px;
@@ -507,7 +512,7 @@ function getProposalParameters (on_success) {
 $(function () {
     $('#tabs').tabs() ;
 
-    if (is_reader) {
+    if (!is_editor) {
         $('select'  ).attr('disabled', 'disabled') ;
         $('input'   ).attr('disabled', 'disabled') ;
         $('textarea').attr('disabled', 'disabled') ;
@@ -585,8 +590,8 @@ $(function () {
   <ul>
     <li>Please fill this form in collaboration with the LCLS point of contact for your experiment.</li>
     <li>All your modifications will be automatically recorded in a database as you'll be making them</li>
-    <li>The input must be provided before a deadline of <span class="important">2016-01-15</span> after
-        which further changes of the experimental requirements will require LCLC Management approval</li>
+    <li>The input must be provided before a deadline of <span class="important">2016-01-20</span> after
+        which further changes of the experimental requirements will require LCLS Management approval</li>
   </ul>
 </div>
 
@@ -699,8 +704,9 @@ HERE;
     function xray_split_and_delay ($id) {
         $str =<<<HERE
 <select id="{$id}" >
+  <option selected="selected" > Not Needed </option>
   <option                     > AMO Split-and-Delay </option>
-  <option selected="selected" > Other </option>
+  <option                     > Other </option>
 </select>
 HERE;
         return $str ;
@@ -758,10 +764,10 @@ HERE;
   <div id="xray" >
     <div class="xray-sect" >
       <div class="comments">
-        This section covers the basic X-ray FEL operation mode, beam parameters,
-        X-ray beamline optics requirement. Most standard parameters can be chosen
+        This section covers the basic X-ray FEL operation modes, beam parameters,
+        X-ray beamline optics requirements. Most standard parameters can be chosen
         from a drop down menu.  If the desired configurations are not list, please
-        describe with more details in the ‘additional information’ field.
+        describe with more details in the <b>Other X-ray Requirements</b> field.
       </div>
     </div>
     <table class="standard" >
@@ -836,7 +842,7 @@ HERE;
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder"     ><?=($i === 1 ? "X-ray spot size (FWHM)" : "&nbsp;")?></td>
+          <td class="item item_group noborder"     ><?=($i === 1 ? "X-ray Spot Size (FWHM)" : "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
           <td class="val"               ><?=input($sect.'-focal-'.$i)?></td>
           <td class="unit  <?=$extra?>" ><?=($i === 1 ? "um" : "&nbsp;")?></td>
@@ -904,7 +910,7 @@ HERE;
 <?php for ($i = 1; $i <= 2; $i++) { $extra   = $i  < 2 ? "noborder" : "" ;
                                              $border1 = $i == 2 ? "border1" : "" ; ?>
         <tr>
-          <td class="item  <?=$extra?> <?=$border1?>" ><?=($i === 1 ? "Scanning range" : "&nbsp;")?></td>
+          <td class="item  <?=$extra?> <?=$border1?>" ><?=($i === 1 ? "Scanning Range" : "&nbsp;")?></td>
           <td class="prio  <?=$extra?> <?=$border1?>" ><?=$i?></td>
           <td class="val               <?=$border1?>" ><?=input($sect.'-energyscan-'.$i)?></td>
           <td class="unit  <?=$extra?> <?=$border1?>" ><?=($i === 1 ? "eV" : "&nbsp;")?></td>
@@ -942,12 +948,12 @@ HERE;
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
-  <option> 100 fs compressed (Ti:S) </option>
-  <option> 50 fs compressed (Ti:S) </option>
-  <option> Uncompressed (Ti:S) </option>
+  <option> 100 fs compressed (Ti:Sapphire) </option>
+  <option> 50 fs compressed (Ti:Sapphire) </option>
+  <option> Uncompressed (Ti:Sapphire) </option>
   <option> Nanosecond </option>
   <option> MEC ns Laser (Glass) </option>
-  <option> MEC fs Laser (Ti:S) </option>
+  <option> MEC fs Laser (Ti:Sapphire) </option>
   <option> Other </option>
 </select>
 HERE;
@@ -969,9 +975,9 @@ HERE;
             $str =<<<HERE
 <select id="{$id}" >
   <option> </option>
-  <option> 800 nm (Ti:S) </option>
-  <option> 400 nm (Ti:S) </option>
-  <option> 266 nm (Ti:S) </option>
+  <option> 800 nm (Ti:Sapphire) </option>
+  <option> 400 nm (Ti:Sapphire) </option>
+  <option> 266 nm (Ti:Sapphire) </option>
   <option> Mid-IR (2.6-18 um) </option>
   <option> OPA (1.2-2.6um) </option>
   <option> OPA SH (600-1200nm) </option>
@@ -1005,10 +1011,10 @@ HERE;
   <div id="laser" >
     <div class="laser-sect" >
       <div class="comments">
-        This page covers basic optical laser parameters. Most standard options
+        This section covers basic optical laser parameters. Most standard options
         can be chosen from the drop down menu. If the desired configurations
         or parameters are not listed, please describe with more details in
-        the ‘additional information’ field.
+        the <b>Other Laser Requirements</b> field.
       </div>
     </div>
     <table class="standard" >
@@ -1091,7 +1097,7 @@ HERE;
 <?php } ?>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder" ><?=($i === 1 ? "X-ray spot size (FWHM)" : "&nbsp;")?></td>
+          <td class="item item_group noborder" ><?=($i === 1 ? "Laser Spot Size (FWHM)" : "&nbsp;")?></td>
           <td class="prio         <?=$extra?>" ><?=$i?></td>
           <td class="val"                      ><?=input($sect.'-spot-'.$i)?></td>
           <td class="unit         <?=$extra?>" ><?=($i === 1 ? "um" : "&nbsp;")?></td>
@@ -1123,7 +1129,7 @@ HERE;
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder" ><?=($i === 1 ? "Pulse Duration (approx)" : "&nbsp;")?></td>
+          <td class="item item_group noborder" ><?=($i === 1 ? "Pulse Duration" : "&nbsp;")?></td>
           <td class="prio         <?=$extra?>" ><?=$i?></td>
           <td class="val"                      ><?=optical_laser_pulse_duration($sect.'-duration-'.$i)?></td>
           <td class="unit         <?=$extra?>" >&nbsp;</td>
@@ -1146,7 +1152,7 @@ HERE;
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder" ><?=($i === 1 ? "Temporal profile" : ($i === 2 ? "(particularly MEC glass laser)" : "&nbsp;"))?></td>
+          <td class="item item_group noborder" ><?=($i === 1 ? "Temporal Profile" : "&nbsp;")?></td>
           <td class="prio            <?=$extra?>" ><?=$i?></td>
           <td class="val"                      ><?=input($sect.'-temporal-'.$i)?></td>
           <td class="unit         <?=$extra?>" >&nbsp;</td>
@@ -1244,21 +1250,12 @@ HERE;
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >&nbsp;</td>
         </tr>
-<?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
-          <td class="item  item_group noborder" ><?=($i === 1 ? "Other Laser Requirements" : "&nbsp;")?></td>
+          <td class="item  item_group noborder" >Other Laser Requirements</td>
           <td class="prio  noborder"            >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-other-'.$i)?></td>
+          <td class="val"                       ><?=textarea($sect.'-other')?></td>
           <td class="unit  noborder"            >&nbsp;</td>
-          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
-        </tr>
-<?php } ?>
-        <tr>
-          <td class="item"  >&nbsp;</td>
-          <td class="prio"  >&nbsp;</td>
-          <td class="val"   ><?=input($sect.'-other-10')?></td>
-          <td class="unit"  >&nbsp;</td>
-          <td class="instr" >&nbsp;</td>
+          <td class="instr noborder"            >Please list and describe additional requirements for optical laser systems</td>
         </tr>
       </tbody>
     </table>
@@ -1269,6 +1266,13 @@ HERE;
 ?>
 
   <div id="env" >
+    <div class="env-sect" >
+      <div class="comments">
+        This section covers the experiment setup and sample handling/delivery details.
+        If your setup can not be sufficiently described by the provided options, please provide additional
+        information in the <b>Other Setup and Sample Information</b> field.
+      </div>
+    </div>
     <table class="standard" >
       <?=$thead?>
       <tbody>
@@ -1399,64 +1403,65 @@ HERE;
         </tr>
 <?php } ?>
         <tr>
-          <td class="item noborder"  >&nbsp;</td>
-          <td class="prio noborder"  >&nbsp;</td>
+          <td class="item noborder"  >↳</td>
+          <td class="prio"           >&nbsp;</td>
           <td class="val"   ><?=textarea($sect.'-tech-other')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >If Other, describe</td>
         </tr>
         <tr>
-          <td class="item  border1" >&nbsp;</td>
-          <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-tech-descr')?></td>
-          <td class="unit  border1" >&nbsp;</td>
-          <td class="instr border1" >Describe reason for multiple techniques and prioritization</td>
+          <td class="item noborder " >&nbsp;</td>
+          <td class="prio  " >&nbsp;</td>
+          <td class="val   " ><?=textarea($sect.'-tech-descr')?></td>
+          <td class="unit  " >&nbsp;</td>
+          <td class="instr " >Describe reason for multiple techniques and prioritization</td>
         </tr>
-        <tr>
+<!--        <tr>
           <td class="item item_group noborder" >Scattering geometry</td>
           <td class="prio            "  >&nbsp;</td>
           <td class="val"   >&nbsp;</td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >&nbsp;</td>
-        </tr>        <tr>
-          <td class="item   noborder" >Desired Minimum Resolution</td>
+        </tr>-->
+        <tr>
+          <td class="item   noborder" >Desired Spatial Resolution</td>
           <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-minres')?></td>
-          <td class="unit             noborder" >A</td>
+          <td class="val"                       ><?=input($sect.'-spatialres')?></td>
+          <td class="unit                     " >A</td>
           <td class="instr            noborder" ><?=$instr_manual?></td>
         </tr>
         <tr>
-          <td class="item  noborder" >↳ Maximum Resolution</td>
+          <td class="item  noborder" >Desired Energy Resolution</td>
           <td class="prio  " >&nbsp;</td>
-          <td class="val   " ><?=input($sect.'-maxres')?></td>
-          <td class="unit  " >&nbsp;</td>
-          <td class="instr " >&nbsp;</td>
+          <td class="val   " ><?=input($sect.'-energyres')?></td>
+          <td class="unit  " >eV</td>
+          <td class="instr noborder" >&nbsp;</td>
         </tr>
         <tr>
           <td class="item  noborder" >Desired Minimum Q-value</td>
           <td class="prio  noborder" >&nbsp;</td>
           <td class="val"            ><?=input($sect.'-minqval')?></td>
           <td class="unit  noborder" >A<sup>-1</sup></td>
-          <td class="instr noborder" ><?=$instr_manual?></td>
+          <td class="instr noborder" >&nbsp;</td>
         </tr>
         <tr>
-          <td class="item  noborder" >↳ Maximum Q-value</td>
+          <td class="item  noborder" >Desired Maximum Q-value</td>
           <td class="prio  " >&nbsp;</td>
           <td class="val   " ><?=input($sect.'-maxqval')?></td>
           <td class="unit  " >&nbsp;</td>
-          <td class="instr border1" >&nbsp;</td>
+          <td class="instr noborder" >&nbsp;</td>
         </tr>
         <tr>
           <td class="item  noborder" >Desired Minimum Sample-Detector Distance</td>
           <td class="prio  noborder" >&nbsp;</td>
-          <td class="val"            ><?=input($sect.'-mindist')?></td>
+          <td class="val"            ><?=input($sect.'-mindetdist')?></td>
           <td class="unit  noborder" >mm</td>
-          <td class="instr noborder" ><?=$instr_manual?></td>
+          <td class="instr noborder" >&nbsp;</td>
         </tr>
         <tr>
           <td class="item  border1" >↳ Maximum Distance</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=input($sect.'-maxdist')?></td>
+          <td class="val   border1" ><?=input($sect.'-maxdetdist')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >&nbsp;</td>
         </tr>
@@ -1487,17 +1492,24 @@ HERE;
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "Samples" : "&nbsp;")?></td>
           <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-userequip-'.$i)?></td>
+          <td class="val"                       ><?=input($sect.'-samples-'.$i)?></td>
           <td class="unit             noborder" >&nbsp;</td>
-          <td class="instr            noborder" ><?=($i === 1 ? "List all samples you intent to measure during your beamline" : "&nbsp;")?></td>
+          <td class="instr            noborder" ><?=($i === 1 ? "List all samples you intend to measure during your beamline" : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
-          <td class="item"  >&nbsp;</td>
+          <td class="item noborder"  >&nbsp;</td>
           <td class="prio"  >&nbsp;</td>
-          <td class="val"   ><?=input($sect.'-userequip-10')?></td>
+          <td class="val"   ><?=input($sect.'-samples-10')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=textarea($sect.'-samples-decsr')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="instr border1" >Provide additional sample information here if needed.</td>
         </tr>
         <tr>
           <td class="item item_group noborder" >Sample Environment</td>
@@ -1514,11 +1526,18 @@ HERE;
           <td class="instr border1" >If Other, describe</td>
         </tr>
         <tr>
-          <td class="item item_group border1"  >Sample Temperature</td>
+          <td class="item item_group noborder"  >Temperature Control Min</td>
+          <td class="prio            noborder"  >&nbsp;</td>
+          <td class="val             border1"   ><?=input($sect.'-min-temperature')?></td>
+          <td class="unit            noborder"  >K</td>
+          <td class="instr           noborder" ><?=$instr_manual?></td>
+        </tr>
+        <tr>
+          <td class="item            border1"  >Max</td>
           <td class="prio            border1"  >&nbsp;</td>
-          <td class="val             border1"   ><?=input($sect.'-temperature-')?></td>
-          <td class="unit            border1"  >K</td>
-          <td class="instr           border1" ><?=$instr_manual?></td>
+          <td class="val             border1"   ><?=input($sect.'-max-temperature')?></td>
+          <td class="unit            border1"  >&nbsp;</td>
+          <td class="instr           border1" >&nbsp;</td>
         </tr>
         <tr>
           <td class="item item_group noborder" >Sample Handling and Delivery</td>
@@ -1528,7 +1547,7 @@ HERE;
           <td class="instr"         >&nbsp;</td>
         </tr>
         <tr>
-          <td class="item noborder" >Fixed Target Needs</td>
+          <td class="item noborder" >Fixed Target</td>
           <td class="prio"          >&nbsp;</td>
           <td class="val"           ><?=yes_no($sect.'-fixtarget')?></td>
           <td class="unit"          >&nbsp;</td>
@@ -1542,31 +1561,24 @@ HERE;
           <td class="instr"         ><?=$instr_manual?></td>
         </tr>
         <tr>
-          <td class="item noborder" >Scanning speed</td>
-          <td class="prio"          >&nbsp;</td>
-          <td class="val"           ><?=input($sect.'-scanspeed')?></td>
-          <td class="unit"          >mm/sec</td>
-          <td class="instr"         ><?=$instr_manual?></td>
+          <td class="item  noborder" >Scanning speed</td>
+          <td class="prio  border1"          >&nbsp;</td>
+          <td class="val   border1"           ><?=input($sect.'-scanspeed')?></td>
+          <td class="unit  border1"          >mm/sec</td>
+          <td class="instr border1"         ><?=$instr_manual?></td>
         </tr>
 <?php for ($i = 1; $i <= 3; $i++) { $extra = $i < 3 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item noborder"     ><?=($i === 1 ? "Liquid Sample Needs" :  "&nbsp;")?></td>
+          <td class="item noborder"     ><?=($i === 1 ? "Liquid Sample" :  "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
           <td class="val"               ><?=env_liquid_sample($sect.'-liquid-'.$i)?></td>
           <td class="unit  <?=$extra?>" >&nbsp;</td>
           <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
         </tr>
 <?php } ?>
-        <tr>
-          <td class="item noborder"  >↳</td>
-          <td class="prio   border1" >&nbsp;</td>
-          <td class="val    border1" ><?=textarea($sect.'-liquid-other')?></td>
-          <td class="unit   border1" >&nbsp;</td>
-          <td class="instr  border1" >If Other, describe</td>
-        </tr>
 <?php for ($i = 1; $i <= 4; $i++) { $extra = $i < 4 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item noborder"     ><?=($i === 1 ? "Gas Jet Needs" :  "&nbsp;")?></td>
+          <td class="item noborder"     ><?=($i === 1 ? "Gas Jet" :  "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
           <td class="val"               ><?=env_gas_jet($sect.'-gas-'.$i)?></td>
           <td class="unit  <?=$extra?>" >&nbsp;</td>
@@ -1574,14 +1586,7 @@ HERE;
         </tr>
 <?php } ?>
         <tr>
-          <td class="item noborder" >↳</td>
-          <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-gas-other')?></td>
-          <td class="unit  border1" >&nbsp;</td>
-          <td class="instr border1" >If Other, describe</td>
-        </tr>
-        <tr>
-          <td class="item noborder" >Aerosol Injector Needs</td>
+          <td class="item noborder" >Aerosol Injector</td>
           <td class="prio"          >&nbsp;</td>
           <td class="val"           ><?=yes_no($sect.'-aerosol')?></td>
           <td class="unit"          >&nbsp;</td>
@@ -1589,9 +1594,9 @@ HERE;
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item noborder"     ><?=($i === 1 ? "Other Injector Needs" : "&nbsp;")?></td>
+          <td class="item noborder"     ><?=($i === 1 ? "Other Injector" : "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
-          <td class="val"               ><?=input($sect.'-sample-other-'.$i)?></td>
+          <td class="val"               ><?=input($sect.'-injector-other-'.$i)?></td>
           <td class="unit  <?=$extra?>" >&nbsp;</td>
           <td class="instr <?=$extra?>" ><?=($i === 1 ? "Describe (1 item or system per line)" : "&nbsp;")?></td>
         </tr>
@@ -1599,13 +1604,13 @@ HERE;
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-sample-other-descr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-samplehandl-other-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Describe reason for multiple sample handling and delivery methods and prioritization</td>
         </tr>
 <?php for ($i = 1; $i <= 3; $i++) { $extra = $i < 3 ? "noborder" : "" ; ?>
         <tr>
-          <td class="item item_group noborder"     ><?=($i === 1 ? "Spectrometers" :  "&nbsp;")?></td>
+          <td class="item item_group noborder"     ><?=($i === 1 ? "X-ray Spectrometers" :  "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
           <td class="val"               ><?=env_spectrometer($sect.'-spectro-'.$i)?></td>
           <td class="unit  <?=$extra?>" >&nbsp;</td>
@@ -1675,13 +1680,19 @@ HERE;
         </tr>
 <?php } ?>
         <tr>
-          <td class="item noborder" >↳</td>
-          <td class="prio"          >&nbsp;</td>
-          <td class="val"           ><?=textarea($sect.'-lab-other')?></td>
-          <td class="unit"          >&nbsp;</td>
-          <td class="instr"         >If Other, describe</td>
+          <td class="item  border1" >↳</td>
+          <td class="prio  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=textarea($sect.'-lab-other')?></td>
+          <td class="unit  border1" >&nbsp;</td>
+          <td class="instr border1" >If Other, describe</td>
         </tr>
-      </tbody>
+        <tr>
+          <td class="item  item_group noborder" >Other Setup and Sample Information</td>
+          <td class="prio  noborder"            >&nbsp;</td>
+          <td class="val"                       ><?=textarea($sect.'-other')?></td>
+          <td class="unit  noborder"            >&nbsp;</td>
+          <td class="instr noborder"            >Please list and describe additional requirements regarding experimental setup and sample handling.</td>
+        </tr>      </tbody>
     </table>
   </div>
 
@@ -2192,7 +2203,7 @@ HERE;
             <td class="item noborder"  >&nbsp;</td>
             <td class="prio   border1" >&nbsp;</td>
             <td class="val    border1" ><?=textarea($sect.'-dev-digi-comments')?></td>
-            <td class="instr  border1" >Please, put your comments for Digitizers</td>
+            <td class="instr  border1" >Put your comments for Digitizers</td>
           </tr>
 <?php for ($i = 1; $i <= 2; $i++) { $extra = $i < 2 ? "noborder" : "" ; ?>
           <tr>
@@ -2206,7 +2217,7 @@ HERE;
             <td class="item noborder"  >&nbsp;</td>
             <td class="prio   border1" >&nbsp;</td>
             <td class="val    border1" ><?=textarea($sect.'-dev-encod-comments')?></td>
-            <td class="instr  border1" >Please, put your comments for Encoders</td>
+            <td class="instr  border1" >Put your comments for Encoders</td>
           </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
           <tr>
@@ -2220,7 +2231,7 @@ HERE;
             <td class="item   border1" >&nbsp;</td>
             <td class="prio   border1" >&nbsp;</td>
             <td class="val    border1" ><?=textarea($sect.'-dev-other-comments')?></td>
-            <td class="instr  border1" >Please, put your comments for Other Devices</td>
+            <td class="instr  border1" >Put your comments for Other Devices</td>
           </tr>
         </tbody>
       </table>
@@ -2257,22 +2268,22 @@ HERE;
           <tr>
             <td class="item noborder" >AMI</td>
             <td class="val"           ><?=input($sect.'-ana-ami')?></td>
-            <td class="instr"         >Please, provide the number of nodes assigned to AMI</td>
+            <td class="instr"         >Provide the number of nodes assigned to AMI</td>
           </tr>
           <tr>
             <td class="item noborder" >psana-python</td>
             <td class="val"           ><?=input($sect.'-ana-psana')?></td>
-            <td class="instr"         >Please, provide the number of nodes assigned to psana-pyton</td>
+            <td class="instr"         >Provide the number of nodes assigned to psana-python</td>
           </tr>
           <tr>
             <td class="item noborder" >user code</td>
             <td class="val"           ><?=input($sect.'-ana-user')?></td>
-            <td class="instr"         >Please, provide the number of nodes assigned to user code</td>
+            <td class="instr"         >Provide the number of nodes assigned to user code</td>
           </tr>
           <tr>
             <td class="item  border1" >&nbsp;</td>
             <td class="val   border1" ><?=textarea($sect.'-ana-comments')?></td>
-            <td class="instr border1" >Please, put your comments for the Analysis</td>
+            <td class="instr border1" >'Comments about your real-time data analysis needs</td>
           </tr>
         </tbody>
       </table>
@@ -2311,13 +2322,13 @@ HERE;
           <tr>
             <td class="item noborder" >Assistance is needed?</td>
             <td class="val"           ><?=yes_no($sect.'-ana-assist')?></td>
-            <td class="instr"         >Please, indicate <b>Yes</b> if you like someone from the analysis group
+            <td class="instr"         >Indicate <b>Yes</b> if you like someone from the analysis group
                                        to contact you before your experiment (highly recommended for
                                        first-time LCLS users)</td>
           <tr>
             <td class="item noborder" >Computing Resources</td>
             <td class="val"           ><?=data_primary_location($sect.'-ana-location')?></td>
-            <td class="instr"         >Please, indicate where you're planning to analyze your data.
+            <td class="instr"         >Indicate where you're planning to analyze your data.
                                        If you're planing to use NERSC supercomputers to do your
                                        analysis then you may need to contact us ahead of time to
                                        get help with setting up a computer account at NERSC.</td>
@@ -2325,7 +2336,7 @@ HERE;
             <tr>
             <td class="item  noborder" >&nbsp;</td>
             <td class="val"            ><?=textarea($sect.'-ana-other')?></td>
-            <td class="instr"          >Please, put your other requirements for the Analysis</td>
+            <td class="instr"          >Comments about your offline data analysis needs</td>
           </tr>
         </tbody>
       </table>

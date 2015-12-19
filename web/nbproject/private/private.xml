@@ -11,6 +11,9 @@
             <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/ws/run13_proposal_save.php</file>
             <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/ws/run13_proposal_get.php</file>
         </group>
-        <group name="PCDS Web App"/>
+        <group name="PCDS Web App">
+            <file>file://AFS/slac.stanford.edu/u/ec/gapon/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposal_catalog.php</file>
+            <file>file://AFS/slac.stanford.edu/u/ec/gapon/lcls/releases/pswww-apps-dev/RegDB/web/html/run13_proposals_grant_access.php</file>
+        </group>
     </open-files>
 </project-private>
