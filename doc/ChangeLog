@@ -11,6 +11,10 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-02-20
+2016-01-11 Igor Gaponenko
+- minor cleanup of the project (removing old version of the Run 13 forms)
+
 Tag: V00-02-19
 2016-01-11 Igor Gaponenko
 - minor changes in the Run 13 Proposal Questionnaire
