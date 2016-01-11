@@ -11,6 +11,13 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-02-19
+2016-01-11 Igor Gaponenko
+- minor changes in the Run 13 Proposal Questionnaire
+- added a trivial application for monitoring the status of the Run 13
+Proposals
+- minor improvement in the reliability of the URAWI PHP client
+
 Tag: V00-02-18
 2015-12-18 Igor Gaponenko
 - the final implemenbtation of the form sent around

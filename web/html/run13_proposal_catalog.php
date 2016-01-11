@@ -193,7 +193,7 @@ a:hover, a.link:hover {
       <td class="proposal"     > Proposal </td>
       <td class="instrument"   > Instrument  </td>
       <td class="spokesperson" > Spokesperson  </td>
-      <td class="access"       > Access level </td>
+      <td class="access"       > Your Access Level </td>
     </tr>
   </thead>
   <tbody>

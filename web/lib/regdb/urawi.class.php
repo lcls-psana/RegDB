@@ -250,6 +250,11 @@ class URAWI {
         curl_close($ch) ;
 
         $data_json = json_decode($data) ;
+        if (!$data_json) {
+            throw new RegDBException (
+                    __METHOD__ ,
+                    "Web service request {$request_url} failed with JSON data: ".$data_json) ;
+        }
         if ($data_json->status !== "success") {
             if (!is_null($on_error)) $on_error($data_json->message) ;
             else

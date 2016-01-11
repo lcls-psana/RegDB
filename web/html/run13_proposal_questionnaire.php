@@ -53,7 +53,7 @@ HERE;
         "LL04" => 'Marcin Sikorski(sikorski@slac.stanford.edu)' ,
         "LL05" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LL09" => 'Osipov, Timur (tyosipov@slac.stanford.edu)' ,
-        "LL13" => 'Diling Zhu (dlzhu@slac.stanford.edu)' ,
+        "LL13" => 'Roberto Alonso-Mori (robertoa@slac.stanford.edu)' ,
         "LL14" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
         "LL20" => 'Galtier, Eric Christophe (egaltier@slac.stanford.edu)' ,
         "LL22" => 'Dakovski, Georgi L. (dakovski@slac.stanford.edu)' ,
