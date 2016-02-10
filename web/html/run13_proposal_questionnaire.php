@@ -92,7 +92,7 @@ HERE;
         "LM27" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
         "LM38" => 'Liang, Mengning (mliang@slac.stanford.edu)' ,
         "LM47" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
-        "LM48" => 'Sanghoon Song (sanghoon@slac.stanford.edu)' ,
+        "LM48" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LM51" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)' ,
         "LM52" => 'Boutet, Sebastien (sboutet@slac.stanford.edu)'
     ) ;

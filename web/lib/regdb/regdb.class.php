@@ -826,6 +826,7 @@ HERE;
          */
         $groups['ps-data'] = True;
         $groups['ps-md'] = True;
+        $groups['ps-sci'] = True;
 
         return $groups;
     }

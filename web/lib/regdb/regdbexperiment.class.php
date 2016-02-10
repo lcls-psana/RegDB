@@ -92,8 +92,14 @@ class RegDBExperiment {
             $this->attr['begin_time'],
             $this->attr['end_time'] ); }
 
+    public function is_standard () {
+        return $this->instrument()->is_standard();
+    }
     public function is_facility () {
         return $this->instrument()->is_location();
+    }
+    public function is_mobile () {
+        return $this->instrument()->is_mobile();
     }
 
     /* =============
@@ -696,7 +702,7 @@ class RegDBExperiment {
             if ($nrows != 1)
                 throw new RegDBException (
                         __class__.'::'.__METHOD__ ,
-                        "internal error when looking at parameters of Run 13 proposal/experiment with ID {$this->id()}") ;
+                        "internal error when looking at parameter {$id} of Run 13 proposal/experiment with ID {$this->id()}, nrows={$nrows}") ;
 
             array_push($params, mysql_fetch_array($result, MYSQL_ASSOC)) ;
         }
