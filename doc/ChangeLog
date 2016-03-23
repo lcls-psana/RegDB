@@ -11,6 +11,11 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-00
+2016-03-22 Igor Gaponenko
+- the preliminary implementation (some minor changes are known to be made) o
+fthe Run 14 Questionnaires.
+
 Tag: V00-02-21
 2016-02-09 Igor Gaponenko
 - minor mods in application: run13_proposal_questionnaire

@@ -49,6 +49,10 @@ class URAWIUser {
         }
         return $this->account ;
     }
+    
+    public function personId () {
+        return intval($this->info->personId) ;
+    }
 }
 
 class URAWIProposal {
@@ -138,9 +142,13 @@ class URAWIProposal {
     
     public function numShifts () {
         if (is_null($this->shiftsScheduled)) {
-            $ival = new \LusiTime\LusiInterval($this->start(), $this->stop()) ;
-            $hours = $this->shiftsScheduled = $ival->toHours() ;
-            $this->shiftsScheduled = intval($hours / 24) + ($hours % 24 ? 1 : 0) ;
+            if ($this->start() && $this->stop()) {
+                $ival = new \LusiTime\LusiInterval($this->start(), $this->stop()) ;
+                $hours = $this->shiftsScheduled = $ival->toHours() ;
+                $this->shiftsScheduled = intval($hours / 24) + ($hours % 24 ? 1 : 0) ;
+            }
+            // Make sure at least 1 shift is reported
+            if (!$this->shiftsScheduled) $this->shiftsScheduled = 1 ;
         }
         return $this->shiftsScheduled ;
     }
@@ -172,8 +180,20 @@ class URAWI {
     public function __construct ($url_base) {
         $this->url_base = $url_base ;
     }
-    
-    
+
+    public function authenticate ($username, $password) {
+
+        $username_encoded = urlencode($username) ;
+        $password_encoded = urlencode($password) ;
+
+        $url = "urawi_auth.php?username={$username_encoded}&password={$password_encoded}" ;
+        $result_json = $this->request($url, null) ;
+        if ($result_json->status === 'success') {
+            return intval($result_json->personId) ;
+        }
+        return null ;
+    }
+
     /**
      * Return a sorted (by the start date) array of proposal numbers for
      * the specified (if any) period of time.
@@ -255,7 +275,7 @@ class URAWI {
                     __METHOD__ ,
                     "Web service request {$request_url} failed with JSON data: ".$data_json) ;
         }
-        if ($data_json->status !== "success") {
+        if (($data_json->status !== "success") && ($data_json->status !== "ok")) {
             if (!is_null($on_error)) $on_error($data_json->message) ;
             else
                 throw new RegDBException (

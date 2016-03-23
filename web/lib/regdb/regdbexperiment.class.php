@@ -675,25 +675,85 @@ class RegDBExperiment {
             "DELETE FROM {$this->connection->database}.experiment_paramv_attachment WHERE id={$id}") ;
     }
 
-    public function saveProposalParam_Run13($id, $val) {
+    /* ***************************
+     *   Proposal Questionnaires
+     * ***************************
+     */
+//
+//    public function saveProposalParam_Run13($id, $val) {
+//        
+//        $this->connection->query (
+//            "INSERT INTO {$this->connection->database}.experiment_proposal_run13 VALUES(".$this->id() .
+//            ",'" .$this->connection->escape_string(AuthDB::instance()->authName()) .
+//            "'," .LusiTime::now()->to64() . 
+//            ",'".$this->connection->escape_string($id) .
+//            "','".$this->connection->escape_string($val) .
+//            "')") ;
+//    }
+//
+//    public function getProposalParams_Run13 () {
+//        
+//        $params = array() ;
+//        foreach ($this->getProposalParams_Run13_ids() as $e) {
+//            $id            = $this->connection->escape_string($e['id']) ;
+//            $modified_time = $e['modified_time'] ;
+//            $result = $this->connection->query (
+//                "SELECT id,val,modified_uid,modified_time FROM {$this->connection->database}.experiment_proposal_run13 ".
+//                " WHERE exper_id={$this->id()}" .
+//                " AND   id='{$id}'" .
+//                " AND   modified_time={$modified_time}") ;
+//                
+//            $nrows = mysql_numrows($result);
+//            if ($nrows != 1)
+//                throw new RegDBException (
+//                        __class__.'::'.__METHOD__ ,
+//                        "internal error when looking at parameter {$id} of Run 13 proposal/experiment with ID {$this->id()}, nrows={$nrows}") ;
+//
+//            array_push($params, mysql_fetch_array($result, MYSQL_ASSOC)) ;
+//        }
+//        return $params ;
+//    }
+//    private function getProposalParams_Run13_ids () {
+//        
+//        $result = $this->connection->query (
+//            "SELECT id,MAX(modified_time) AS modified_time FROM {$this->connection->database}.experiment_proposal_run13 WHERE exper_id={$this->id()} GROUP BY id") ;
+//
+//        $ids = array() ;
+//        for ($i = 0, $nrows = mysql_numrows($result); $i < $nrows; $i++) {
+//            $attr = mysql_fetch_array($result, MYSQL_ASSOC) ;
+//            array_push (
+//                $ids ,
+//                array (
+//                    'id'            => $attr['id'] ,
+//                    'modified_time' => $attr['modified_time'])) ;
+//        }
+//        return $ids ;
+//    }
+
+    public  function saveProposalParam_Run13($id, $val) { return $this->saveProposalParam_    (13, $id, $val) ; }
+    public  function getProposalParams_Run13()          { return $this->getProposalParams_    (13) ; }
+
+    public  function saveProposalParam_Run14($id, $val) { return $this->saveProposalParam_    (14, $id, $val) ; }
+    public  function getProposalParams_Run14()          { return $this->getProposalParams_    (14) ; }
+    
+    private function saveProposalParam_($run, $id, $val) {
         
         $this->connection->query (
-            "INSERT INTO {$this->connection->database}.experiment_proposal_run13 VALUES(".$this->id() .
+            "INSERT INTO {$this->connection->database}.experiment_proposal_run{$run} VALUES(".$this->id() .
             ",'" .$this->connection->escape_string(AuthDB::instance()->authName()) .
             "'," .LusiTime::now()->to64() . 
             ",'".$this->connection->escape_string($id) .
             "','".$this->connection->escape_string($val) .
             "')") ;
     }
-
-    public function getProposalParams_Run13 () {
+    private function getProposalParams_ ($run) {
         
         $params = array() ;
-        foreach ($this->getProposalParams_Run13_ids() as $e) {
+        foreach ($this->getProposalParams_ids_($run) as $e) {
             $id            = $this->connection->escape_string($e['id']) ;
             $modified_time = $e['modified_time'] ;
             $result = $this->connection->query (
-                "SELECT id,val,modified_uid,modified_time FROM {$this->connection->database}.experiment_proposal_run13 ".
+                "SELECT id,val,modified_uid,modified_time FROM {$this->connection->database}.experiment_proposal_run{$run} ".
                 " WHERE exper_id={$this->id()}" .
                 " AND   id='{$id}'" .
                 " AND   modified_time={$modified_time}") ;
@@ -702,16 +762,16 @@ class RegDBExperiment {
             if ($nrows != 1)
                 throw new RegDBException (
                         __class__.'::'.__METHOD__ ,
-                        "internal error when looking at parameter {$id} of Run 13 proposal/experiment with ID {$this->id()}, nrows={$nrows}") ;
+                        "internal error when looking at parameter {$id} of Run {$run} proposal/experiment with ID {$this->id()}, nrows={$nrows}") ;
 
             array_push($params, mysql_fetch_array($result, MYSQL_ASSOC)) ;
         }
         return $params ;
     }
-    private function getProposalParams_Run13_ids () {
+    private function getProposalParams_ids_ ($run) {
         
         $result = $this->connection->query (
-            "SELECT id,MAX(modified_time) AS modified_time FROM {$this->connection->database}.experiment_proposal_run13 WHERE exper_id={$this->id()} GROUP BY id") ;
+            "SELECT id,MAX(modified_time) AS modified_time FROM {$this->connection->database}.experiment_proposal_run{$run} WHERE exper_id={$this->id()} GROUP BY id") ;
 
         $ids = array() ;
         for ($i = 0, $nrows = mysql_numrows($result); $i < $nrows; $i++) {
@@ -724,5 +784,7 @@ class RegDBExperiment {
         }
         return $ids ;
     }
+
+
 }
 ?>

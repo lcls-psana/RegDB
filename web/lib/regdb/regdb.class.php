@@ -830,6 +830,138 @@ HERE;
 
         return $groups;
     }
+    
+    /* =========================
+     *   Run 14 Questionnaires
+     * =========================
+     */
+    public function saveProposalParam_Run14($proposal, $id, $val, $user) {
+        
+        $proposal_escaped = $this->connection->escape_string(trim($proposal)) ;
+        $user_escaped     = $this->connection->escape_string(trim("{$user}")) ;
+        $modified_time_64 = LusiTime::now()->to64() ;
+        $id_escaped       = $this->connection->escape_string(trim($id)); 
+        $val_escaped      = $this->connection->escape_string(trim($val)) ;
+        $sql =  "INSERT INTO {$this->connection->database}.lcls_proposal_run14 VALUES(" .
+                "'{$proposal_escaped}'," .
+                "'{$user_escaped}',"     .
+                "{$modified_time_64},"   . 
+                "'{$id_escaped}',"       .
+                "'{$val_escaped}'"       .
+                ")" ;
+        $this->connection->query ($sql) ;
+    }
+    public function getProposalParams_Run14 ($proposal) {
+        $params = array() ;
+        foreach ($this->getProposalParams_ids_Run14($proposal) as $e) {
+            $id            = $this->connection->escape_string($e['id']) ;
+            $modified_time = $e['modified_time'] ;
+            $result = $this->connection->query (
+                "SELECT * FROM {$this->connection->database}.lcls_proposal_run14 ".
+                " WHERE proposal='".$this->connection->escape_string($proposal)."'" .
+                " AND   id='{$id}'" .
+                " AND   modified_time={$modified_time}") ;
+                
+            $nrows = mysql_numrows($result);
+            if ($nrows != 1) {
+                throw new RegDBException (
+                        __class__.'::'.__METHOD__ ,
+                        "internal error when looking at parameter {$id} of Run 14 proposal {$proposal}, nrows={$nrows}") ;
+            }
+            array_push($params, mysql_fetch_array($result, MYSQL_ASSOC)) ;
+        }
+        return $params ;
+    }
+    private function getProposalParams_ids_Run14 ($proposal) {
+        
+        $result = $this->connection->query (
+            "SELECT id,MAX(modified_time) AS modified_time FROM {$this->connection->database}.lcls_proposal_run14" .
+            " WHERE proposal='".$this->connection->escape_string($proposal)."' GROUP BY id") ;
+
+        $ids = array() ;
+        for ($i = 0, $nrows = mysql_numrows($result); $i < $nrows; $i++) {
+            $attr = mysql_fetch_array($result, MYSQL_ASSOC) ;
+            array_push (
+                $ids ,
+                array (
+                    'id'            => $attr['id'] ,
+                    'modified_time' => $attr['modified_time'])) ;
+        }
+        return $ids ;
+    }
+    
+    public function getProposalContacts_Run14 () {
+        return array (
+            "LM91" => "Minitti, Michael (minitti@slac.stanford.edu)" ,
+            "LM93" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LM94" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LM95" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LM98" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN01" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN02" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LN04" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LN05" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN08" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN09" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN11" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN17" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN22" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN24" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN26" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN27" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN28" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LN34" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN38" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN41" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN43" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN47" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN48" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN49" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN50" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN51" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN52" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN53" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN54" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN60" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN61" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LN65" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN72" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN73" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN76" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN83" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN84" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LN85" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LN96" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LN98" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO04" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO08" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LO14" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LO15" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO16" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO19" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO20" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LO22" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO26" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LO35" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LO38" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LO39" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO40" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LO44" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO45" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO46" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO47" => "Boutet, Sebastien (sboutet@slac.stanford.edu)" ,
+            "LO48" => "MacKinnon, Andy (andymack@slac.stanford.edu)" ,
+            "LO50" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO51" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO52" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO56" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO59" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO63" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO64" => "Minitti, Michael (minitti@slac.stanford.edu" ,
+            "LO66" => "Robert, Aymeric (aymeric@slac.stanford.edu)" ,
+            "LO67" => "Robert, Aymeric (aymeric@slac.stanford.edu)"
+        ) ;
+    }
 }
 
 /* =======================
