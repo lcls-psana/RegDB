@@ -526,6 +526,7 @@ var proposal_spokesPerson_personId = <?=$info->contact()->personId()?> ;
 
 var urawi_authentication = <?=($urawi_authentication ? 1 : 0)?> ;
 var urawi_personId       = 0 ;
+var urawi_contact        = '<?=$info->contact()->name()?>' ;
 
 var is_editor = <?=$is_editor ? 1 : 0?> ;
 
@@ -573,14 +574,15 @@ function saveProposalParameter (id, val) {
             id:  id ,
             val: val ,
             urawi_authentication: urawi_authentication ,
-            urawi_personId:       urawi_personId
+            urawi_personId:       urawi_personId ,
+            urawi_contact:        urawi_contact
         } ,
         function (data) {
             var p = data.proposal ;
             var msec = p.modified_time / 1000000 ;
             var t = new Date(msec) ;
             var s = time2htmlLocal(t) ;
-            updateStatus('[ Last update: <b>'+s+'</b> &nbsp;by user: <b>'+p.modified_uid+'</b> ]') ;
+            updateStatus('[ Last update on: <b>'+s+'</b> &nbsp;by: <b>'+p.modified_uid+'</b> ]') ;
         } ,
         function (errmsg) {
             alert(errmsg) ;
@@ -613,9 +615,9 @@ function on_authenticated () {
     $('#tabs').tabs() ;
 
     if (!is_editor) {
-        $('select'  ).attr('disabled', 'disabled') ;
-        $('input'   ).attr('disabled', 'disabled') ;
-        $('textarea').attr('disabled', 'disabled') ;
+        $('select'           ).attr('disabled', 'disabled') ;
+        $('input.value2store').attr('disabled', 'disabled') ;
+        $('textarea'         ).attr('disabled', 'disabled') ;
     } else {
         $('select').change(function () {
             var elem = $(this) ,
@@ -623,7 +625,7 @@ function on_authenticated () {
                 val  = elem.val() ;
             saveProposalParameter(id, val) ;
         }) ;
-        $('input').change(function () {
+        $('input.value2store').change(function () {
             var elem = $(this) ,
                 id   = elem.attr('id') ,
                 val  = elem.val() ;
@@ -885,7 +887,7 @@ HERE;
 
     function input ($id) {
         $str =<<<HERE
-<input id="{$id}" type="text" width="32" />
+<input id="{$id}" class="value2store" type="text" width="32" />
 HERE;
         return $str ;
     }
@@ -1182,7 +1184,9 @@ HERE;
   <div id="xraytech" >
 
     <div class="comments">
-      Instructions for this sections are to be defined.
+      This section covers many of the hutch specific parameters you need for
+      your experiment. If the desired configurations are not listed, please
+      describe with more details in the <b>Other X-ray Requirements</b> field.
     </div>
 
     <table class="standard" >
@@ -1272,7 +1276,7 @@ HERE;
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-endstation-decsr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-endstation-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Describe reason for multiple needs and prioritization</td>
         </tr>
@@ -1303,7 +1307,7 @@ HERE;
         <tr>
           <td class="item item_group noborder"     ><?=($i === 1 ? "MEC Diagnostics" :  "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
-          <td class="val"               ><?=xraytech_mec_diagnostics($sect.'-diag-'.$i)?></td>
+          <td class="val"               ><?=xraytech_mec_diagnostics($sect.'-mecdiag-'.$i)?></td>
           <td class="unit  <?=$extra?>" >&nbsp;</td>
           <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
         </tr>
@@ -1311,14 +1315,14 @@ HERE;
         <tr>
           <td class="item noborder" >↳</td>
           <td class="prio"          >&nbsp;</td>
-          <td class="val"           ><?=textarea($sect.'-diag-other')?></td>
+          <td class="val"           ><?=textarea($sect.'-mecdiag-other')?></td>
           <td class="unit"          >&nbsp;</td>
           <td class="instr"         >If Other, describe</td>
         </tr>
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-diag-decsr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-mecdiag-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Describe reason for multiple diagnostics and prioritization</td>
         </tr>
@@ -1642,7 +1646,7 @@ HERE;
   <option> GVDN </option>
   <option> Rayleigh jet </option>
   <option> Sheet jet </option>
-  <option> High viscosity </option>
+  <option> High viscosity jet </option>
   <option> Drop on demand </option>
   <option> MESH </option>
   <option> Piezo valve </option>
@@ -1742,7 +1746,7 @@ HERE;
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-samples-decsr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-samples-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Provide additional sample information here if needed.</td>
         </tr>
@@ -2066,7 +2070,8 @@ HERE;
         <p>The LCLS DAQ supports a number of cameras, digitizers, encoders and other
            devices that can be recorded and analyzed alongside the rest of the science data.
            Please fill out this section with the LCLS point of contact to identify any
-           special instrumentation needs that are not already captured in the Detectors tab.
+           special instrumentation needs that are <b>not already captured</b> in
+           the <b>Detectors</b> tab.
            Specifically, this information will be used to ensure that all necessary equipment
            is available in this hutch at the time of the experiment.</p>
       </div>
@@ -2081,7 +2086,21 @@ HERE;
           </tr>
         </thead>
         <tbody>
+<?php for ($i = 1; $i <= 20; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
           <tr>
+            <td class="item item_group noborder" ><?=($i === 1 ? "Device" : "&nbsp;")?></td>
+            <td class="prio         <?=$extra?>" ><?=select_quantity($sect.'-dev-'.$i.'-qty'  )?></td>
+            <td class="val"                      ><?=input          ($sect.'-dev-'.$i.'-descr')?></td>
+            <td class="instr        <?=$extra?>" ><?=($i === 1 ? "Describe (1 item or system per line)" : "&nbsp;")?></td>
+          </tr>
+<?php } ?>
+          <tr>
+            <td class="item   border1" >&nbsp;</td>
+            <td class="prio   border1" >&nbsp;</td>
+            <td class="val    border1" ><?=textarea($sect.'-comments')?></td>
+            <td class="instr  border1" >Put your comments (if any)</td>
+          </tr>
+<!--          <tr>
             <td class="item item_group noborder" >Camera binning requirements</td>
             <td class="prio noborder"            >&nbsp;</td>
             <td class="val"                      ><?=data_camera_binning($sect.'-dev-cam-binning')?></td>
@@ -2153,7 +2172,7 @@ HERE;
             <td class="prio   border1" >&nbsp;</td>
             <td class="val    border1" ><?=textarea($sect.'-dev-other-comments')?></td>
             <td class="instr  border1" >Put your comments for Other Devices</td>
-          </tr>
+          </tr>-->
         </tbody>
       </table>
     </div>
@@ -2302,7 +2321,13 @@ HERE;
 ?>
   
   <div id="contr" >
-    
+
+    <div class="comments">
+      <p>The experiment spokesperson is NOT expected to know all of this in detail
+         and should fill out what they know and their LCLS contact will help fill
+         out the needs after discussions with the spokesperson.</p>
+    </div>
+
     <div class="control-sect" >
       <h1>1. USER Supplied Computers</h1>
       <div class="comments">
@@ -2617,7 +2642,9 @@ HERE;
   <div id="user" >
 
     <div class="comments">
-      Instructions for this sections are to be defined.
+      Please identify all equipment you plan to bring to LCLS for your experiment.
+      ALL non-SLAC owned equipment must be identified.  Please use the comment boxes
+      below to describe the equipment you plan to bring on-site.
     </div>
 
     <table class="standard" >
@@ -2632,36 +2659,72 @@ HERE;
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "User-supplied Laser Equipment" : "&nbsp;")?></td>
-          <td class="val"                       ><?=input($sect.'-userequip-'.$i)?></td>
+          <td class="val"                       ><?=input($sect.'-laser-'.$i)?></td>
           <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
           <td class="item  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=input($sect.'-userequip-10')?></td>
+          <td class="val   border1" ><?=input($sect.'-laser-10')?></td>
           <td class="instr border1" >&nbsp;</td>
         </tr>
-        <tr>
-          <td class="item  item_group noborder" >Other Laser Requirements</td>
-          <td class="val"                       ><?=textarea($sect.'-other')?></td>
-          <td class="instr noborder"            >Please list and describe additional requirements for optical laser systems</td>
-        </tr>
+<!--        <tr>
+          <td class="item  border1" >Other Laser Requirements</td>
+          <td class="val   border1" ><?=textarea($sect.'-laser-other')?></td>
+          <td class="instr border1" >Please list and describe additional requirements for optical laser systems</td>
+        </tr>-->
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
-          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Equipment" : "&nbsp;")?></td>
-          <td class="val"            ><?=input($sect.'-userenv-'.$i)?></td>
-          <td class="instr noborder" ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied sample injector/environment " : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-sampleenv-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
-          <td class="item  border1"  >&nbsp;</td>
-          <td class="val   border1"   ><?=input($sect.'-userenv-10')?></td>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-sampleenv-10')?></td>
           <td class="instr border1" >&nbsp;</td>
         </tr>
+<!--        <tr>
+          <td class="item  item_group border1" >User Supplied Detectors</td>
+          <td class="val   border1"            ><?=textarea($sect.'-detectors')?></td>
+          <td class="instr border1"            >Please list and describe additional detectors which you're bringing to LCLS</td>
+        </tr>-->
+<?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
-          <td class="item  item_group noborder" >User Supplied Detectors</td>
-          <td class="val"                       ><?=textarea($sect.'-detectors')?></td>
-          <td class="instr noborder"            >Please list and describe additional detectors which you're bringing to LCLS</td>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Detectors" : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-detectors-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-detectors-10')?></td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+<?php for ($i = 1; $i <= 9; $i++) { ?>
+        <tr>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Controls Equipment" : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-controls-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-controls-10')?></td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+<?php for ($i = 1; $i <= 9; $i++) { ?>
+        <tr>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Equipment (misc)" : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-misc-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  noborder" >&nbsp;</td>
+          <td class="val   noborder" ><?=input($sect.'-misc-10')?></td>
+          <td class="instr noborder" >&nbsp;</td>
         </tr>
       </tbody>
     </table>

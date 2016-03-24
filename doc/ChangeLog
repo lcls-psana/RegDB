@@ -11,6 +11,12 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-01
+2016-03-24 Igor Gaponenko
+- the final implementation of the Run 14 Questionnairy.
+- the progress monitoring application for the Questionnairies.
+- the development version of the Run 14 Proposal Summary application
+
 Tag: V00-03-00
 2016-03-22 Igor Gaponenko
 - the preliminary implementation (some minor changes are known to be made) o

@@ -3,6 +3,9 @@
 /*
  */
 require_once 'dataportal/dataportal.inc.php' ;
+require_once 'lusitime/lusitime.inc.php' ;
+
+use \LusiTime\LusiTime ;
 
 class EventHandler {
     public function on_error($msg, $stack=null) {
@@ -17,13 +20,38 @@ HERE;
 
 \DataPortal\Service::run_handler ('GET', function ($SVC) {
 
-    $infos = array() ;
+    // Page access is restricted to the LCLS personell logged via the WebAuth
+    // authentication system.
+    $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Editor') ;
+    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Reader') ;
+    $SVC->assert(
+        $is_editor || $is_reader ,
+        "We're sorry - you're not authorized to view this document") ;
+        
+    $modified = array() ;
+    $infos    = array() ;
+
     foreach ($SVC->regdb()->getProposalContacts_Run14() as $proposalNo => $lcls_contact) {
 
         $info = $SVC->safe_assign(
             $SVC->urawi()->proposalInfo($proposalNo) ,
             "No such proposal found: {$proposalNo}." ) ;
 
+        $modified_num  = 0 ;
+        $modified_time = 0 ;
+        $modified_uid  = '' ;
+        foreach ($SVC->regdb()->getProposalParams_Run14($proposalNo) as $param) {
+            $modified_num++ ;
+            if ($param['modified_time'] > $modified_time) {
+                $modified_time = $param['modified_time'] ;
+                $modified_uid  = $param['modified_uid'] ;
+            }
+        }
+        $modified[$proposalNo] = array (
+            'num'  => $modified_num  ? $modified_num : '' ,
+            'time' => $modified_time ? LusiTime::from64($modified_time)->toStringShort() : '' ,
+            'uid'  => $modified_uid
+        ) ;
         $infos[$proposalNo] = $info ;
     }
 ?>
@@ -33,7 +61,7 @@ HERE;
 
 <head>
 
-<title>Run 14 Proposal Catalog</title>
+<title>Run 14 Proposal Catalog (and the last modifications)</title>
 
 <style>
 
@@ -116,7 +144,7 @@ a:hover, a.link:hover {
 </head>
 <body>
 
-<div id="title" >Run 14 Proposal Catalog</div>
+<div id="title" >Run 14 Proposal Catalog (and the last modifications)</div>
 
 <div id="comments" >
     Please, select your proposal and follow the link by clicking on the proposal
@@ -127,15 +155,23 @@ a:hover, a.link:hover {
 <table>
   <thead>
     <tr>
-      <td class="proposal"     > Proposal </td>
-      <td class="instrument"   > Instrument  </td>
+      <td class="proposal"      > Proposal </td>
+      <td class="instrument"    > Instrument  </td>
+      <td class="spokesperson"  > Spokesperson  </td>
+      <td class="modified-num"  > # of modified fields </td>
+      <td class="modified-time" > Last Modification </td>
+      <td class="modified-uid"  > By User </td>
     </tr>
   </thead>
   <tbody>
 <?php foreach ($infos as $proposalNo => $info) { ?>
     <tr>
-      <td class="proposal"     ><a class="link" href="https://pswww.slac.stanford.edu/urawi/run14_proposal_questionnaire?proposal=<?=$proposalNo?>" target="_blank" ><?=$proposalNo?></a></td>
+      <td class="proposal"     ><a class="link" href="https://pswww.slac.stanford.edu/apps-dev/regdb/run14_proposal_questionnaire?proposal=<?=$proposalNo?>" target="_blank" ><?=$proposalNo?></a></td>
       <td class="instrument"   ><?=$info->instrument()?></td>
+      <td class="spokesperson"  ><?=$info->contact()->name()?></td>
+      <td class="modified-num"  >&nbsp;<?=$modified[$proposalNo]['num']?></td>
+      <td class="modified-time" >&nbsp;<?=$modified[$proposalNo]['time']?></td>
+      <td class="modified-uid"  >&nbsp;<?=$modified[$proposalNo]['uid']?></td>
     </tr>      
 <?php } ?>
 
