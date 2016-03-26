@@ -21,7 +21,7 @@ HERE;
     foreach ($SVC->regdb()->getProposalContacts_Run14() as $proposalNo => $lcls_contact) {
 
         $info = $SVC->safe_assign(
-            $SVC->urawi()->proposalInfo($proposalNo) ,
+            $SVC->urawi()->proposalInfo($proposalNo, "proposal_basic.php") ,
             "No such proposal found: {$proposalNo}." ) ;
 
         $infos[$proposalNo] = $info ;

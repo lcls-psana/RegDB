@@ -52,7 +52,7 @@ class TableGenerator1 {
     }
     private function addRow($proposalNo) {
         $row = array (
-            "<a class=\"link\" href=\"run13_proposal_questionnaire?proposal={$proposalNo}\" target=\"_blank\">{$proposalNo}</a>" ,
+            "<a class=\"link\" href=\"run14_proposal_questionnaire?proposal={$proposalNo}\" target=\"_blank\">{$proposalNo}</a>" ,
             $this->infos[$proposalNo]->instrument() ,
             substr($this->contacts[$proposalNo], 0, strpos($this->contacts[$proposalNo], '('))
         ) ;
@@ -149,25 +149,33 @@ HERE;
     $debug = $SVC->optional_int('debug', 0) ;
     if ($debug === 0) unset($debug) ;
 
-    $infos         = array() ;
-    $params        = array() ;
-    $lcls_contacts = $SVC->regdb()->getProposalContacts_Run14() ;
+    // Page access is restricted to the LCLS personell logged via the WebAuth
+    // authentication system.
+    $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Editor') ;
+    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Reader') ;
+    $SVC->assert(
+        $is_editor || $is_reader ,
+        "We're sorry - you're not authorized to view this document") ;
 
-    foreach ($lcls_contacts as $proposalNo => $lcls_contact) {
+    $infos     = array() ;
+    $params    = array() ;
+    $proposals = array() ;
+    $contacts  = $SVC->regdb()->getProposalContacts_Run14() ;
+
+    foreach ($contacts as $proposalNo => $contact) {
 
         $info = $SVC->safe_assign(
-            $SVC->urawi()->proposalInfo($proposalNo) ,
+            $SVC->urawi()->proposalInfo($proposalNo, "proposal_basic.php") ,
             "No such proposal found: {$proposalNo}." ) ;
 
-        if ($SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Editor') ||
-            $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Reader')) {
-            $id2param = array() ;
-            foreach ($SVC->regdb()->getProposalParams_Run14($proposalNo) as $param) {
-                $id2param[$param['id']] = $param['val'] ;
-            }
-            $infos  [$proposalNo] = $info ;
-            $params [$proposalNo] = $id2param ;
+        $id2param = array() ;
+        foreach ($SVC->regdb()->getProposalParams_Run14($proposalNo) as $param) {
+            $id2param[$param['id']] = $param['val'] ;
         }
+        $infos  [$proposalNo] = $info ;
+        $params [$proposalNo] = $id2param ;
+
+        array_push($proposals, $proposalNo) ;
 
         if (isset($debug) && count($params) >= $debug) break ;
     }
@@ -320,10 +328,18 @@ a:hover, a.link:hover {
 
 $(function () {
     var tabs = $('body').children('#tabs').tabs() ;
-    tabs.children('#p-xray') .children('#tabs').tabs() ;
-    tabs.children('#p-laser').children('#tabs').tabs() ;
-    tabs.children('#p-env')  .children('#tabs').tabs() ;
-    tabs.children('#p-data') .children('#tabs').tabs() ;
+
+    tabs.children('#p-xray')        .children('#tabs').tabs() ;
+    tabs.children('#p-xraytech')    .children('#tabs').tabs() ;
+    tabs.children('#p-laser')       .children('#tabs').tabs() ;
+    tabs.children('#p-sample')      .children('#tabs').tabs() ;
+    tabs.children('#p-detector')    .children('#tabs').tabs() ;
+    tabs.children('#p-daq')         .children('#tabs').tabs() ;
+//    tabs.children('#p-data-online') .children('#tabs').tabs() ;
+//    tabs.children('#p-data-offline').children('#tabs').tabs() ;
+    tabs.children('#p-user')        .children('#tabs').tabs() ;
+//    tabs.children('#p-pre')         .children('#tabs').tabs() ;
+//    tabs.children('#p-post')        .children('#tabs').tabs() ;
 }) ;
 
 </script>
@@ -336,11 +352,17 @@ $(function () {
 <div id="tabs" >
 
   <ul>
-    <li><a href="#p-xray"  >X-rays</a></li>
-    <li><a href="#p-laser" >Optical Laser</a></li>
-    <li><a href="#p-env"   >Setup and Sample</a></li>
-    <li><a href="#p-contr" >Controls</a></li>
-    <li><a href="#p-data"  >DAQ & Analysis</a></li>
+    <li><a href="#p-xray"         >X-rays</a></li>
+    <li><a href="#p-xraytech"     >X-Ray Technique & Endstation</a></li>
+    <li><a href="#p-laser"        >Optical Laser</a></li>
+    <li><a href="#p-sample"       >Sample Delivery and Environment</a></li>
+    <li><a href="#p-detector"     >Detectors</a></li>
+    <li><a href="#p-daq"          >DAQ</a></li>
+    <li><a href="#p-data-online"  >Online Analysis</a></li>
+    <li><a href="#p-data-offline" >Offline Analysis</a></li>
+    <li><a href="#p-user"         >User Supplied Equipment</a></li>
+    <li><a href="#p-pre"          >Pre-experiment & off-shift hutch activities</a></li>
+    <li><a href="#p-post"         >Post-experiment needs</a></li>
   </ul>
   
   <div id="p-xray" >
@@ -512,7 +534,103 @@ $(function () {
       </div>
     </div>
   </div>
+
+  <div id="p-xraytech" >
+
+    <div id="tabs" class="inner" >
+    <ul>
+      <li><a href="#p-xraytech-used"         >X-ray Techniques to be Used</a></li>
+      <li><a href="#p-xraytech-endstation"   >Specific Endstation</a></li>
+      <li><a href="#p-xraytech-spectrometer" >X-ray Spectrometers</a></li>
+      <li><a href="#p-xraytech-mecdiag"      >MEC Diagnostics</a></li>
+    </ul>
+
+    <div id="p-xraytech-used" >
+<?php
+    $tabledef = array() ;
+
+    for ($i = 1; $i <= 5; $i++)
+        array_push ($tabledef ,
+            array("{$i}", "xraytech-tech-{$i}", '')) ;
+
+    array_push ($tabledef ,
+        array('Other',                         "xraytech-tech-other", '') ,
+        array('Reasons for prioritization',    "xraytech-tech-descr", '') ,
+        array('Spatial Resol.',                "xraytech-spatialres", '') ,
+        array('Energy Resol.',                 "xraytech-energyres",  '') ,
+        array('Q-value', array(
+            array('Min',                       "xraytech-minqval",    '') ,
+            array('Max',                       "xraytech-maxqval",    ''))) ,
+        array('Sample-Detector Distance: Min', "xraytech-mindetdist", '') ,
+        array('Max',                           "xraytech-maxdetdist", '')) ;
+
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-xraytech-endstation" >
+<?php
+    $tabledef = array() ;
+
+    for ($i = 1; $i <= 3; $i++)
+        array_push($tabledef ,
+            array("{$i}", "env-endstation-{$i}", '')) ;
+
+    array_push($tabledef ,
+        array('Other',                      "xraytech-endstation-other", '') ,
+        array('Reasons for prioritization', "xraytech-endstation-descr", '')) ;
     
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-xraytech-spectrometer" >
+<?php
+    $tabledef = array() ;
+
+    for ($i = 1; $i <= 3; $i++)
+        array_push($tabledef ,
+            array("{$i}", "xraytech-spectro-{$i}", '')) ;
+
+    array_push($tabledef ,
+        array('Other',                      "xraytech-spectro-other", '') ,
+        array('Reasons for prioritization', "xraytech-spectro-descr", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-xraytech-mecdiag" >
+<?php
+    $tabledef = array() ;
+
+    for ($i = 1; $i <= 5; $i++)
+        array_push($tabledef ,
+            array("{$i}", "xraytech-mecdiag-{$i}", '')) ;
+
+    array_push($tabledef ,
+        array('Other',                      "xraytech-mecdiag-other", '') ,
+        array('Reasons for prioritization', "xraytech-mecdiag-descr", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+    </div>
+  </div>
+
   <div id="p-laser" >
 
     <div id="tabs" class="inner" >
@@ -528,9 +646,6 @@ $(function () {
         <li><a href="#p-laser-intensity"    >Desired Intensity on Target</a></li>
         <li><a href="#p-laser-timeres"      >Time Tool</a></li>
         <li><a href="#p-laser-geom"         >Pump Laser Geometry</a></li>
-        <li><a href="#p-laser-userequip"    >User-supplied Laser Equipment</a></li>
-        <li><a href="#p-laser-other"        >Other Laser Requirements</a></li>
-
       </ul>
 
       <div id="p-laser-general" >
@@ -550,7 +665,7 @@ $(function () {
 <?php
     $tabledef = array (
         array('Mode',                        'laser-adv',                 '') ,
-        array('Multiple Simultaneous Beams', 'laser-adv-simbeams',        '') ,
+        array('Multiple Simultaneous Beams', 'laser-adv-simbeams',        'No') ,
         array('# of beams',                  'laser-adv-simbeams-number', '') ,
         array('Needs and priorities',        'laser-adv-descr',           '')) ;
 
@@ -690,7 +805,7 @@ $(function () {
 <?php    
     $tabledef = array (
         array("Desired Time Resolution", "laser-timeres",  '') ,
-        array("Time Tool Needed?",       "laser-timetool", '')) ;
+        array("Time Tool Needed?",       "laser-timetool", 'No')) ;
 
     $tgen = new TableGenerator1 (
         $proposals, $contacts, $infos, $params, $tabledef) ;
@@ -718,363 +833,253 @@ $(function () {
 ?>
       </div>
 
-      <div id="p-laser-userequip" >
-<?php
-    $tabledef = array() ;
-
-    for ($i = 1; $i <= 10; $i++)
-        array_push ($tabledef ,
-            array("{$i}", "laser-userequip-{$i}", '')) ;
-    
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-laser-other" >
-<?php    
-    $tabledef = array (
-        array("Requirements", "laser-other", '')) ;
-
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
     </div>
   </div>   
 
-  <div id="p-env" >
+
+  <div id="p-sample" >
 
     <div id="tabs" class="inner" >
       <ul>
-        <li><a href="#p-env-tech"           >X-ray Techniques to be Used</a></li>
-        <li><a href="#p-env-endstation"     >Specific Endstation</a></li>
-        <li><a href="#p-env-samples"        >Samples</a></li>
-        <li><a href="#p-env-sampleenv"      >Sample Environment</a></li>
-        <li><a href="#p-env-temperature"    >Temperature Control Min</a></li>
-        <li><a href="#p-env-samplehandling" >Sample Handling and Delivery</a></li>
-        <li><a href="#p-env-spectro"        >X-ray Spectrometers</a></li>
-        <li><a href="#p-env-diag"           >MEC Diagnostics</a></li>
-        <li><a href="#p-env-userenv"        >User-Supplied Equipment</a></li>
-        <li><a href="#p-env-lab"            >Laboratory Space Needed</a></li>
-        <li><a href="#p-env-other"          >Other Setup and Sample Information</a></li>
+        <li><a href="#p-sample-samples"        >Samples</a></li>
+        <li><a href="#p-sample-env"            >Environment</a></li>
+        <li><a href="#p-sample-delivery"       >Delivery Method</a></li>
+        <li><a href="#p-sample-userequipment"  >User-supplied Equipment</a></li>
+        <li><a href="#p-sample-reservoir"      >Reservoir</a></li>
+        <li><a href="#p-sample-temperature"    >Temperature Control</a></li>
+        <li><a href="#p-sample-pershift"       >Reservoirs per shift</a></li>
+        <li><a href="#p-sample-provided"       >Delivery equipment provided by LCLS</a></li>
+        <li><a href="#p-sample-amount"         >Sample amount expected</a></li>
+        <li><a href="#p-sample-reservoir-temp" >Reservoir temperature</a></li>
+        <li><a href="#p-sample-nozzle"         >Desired nozzle diameter</a></li>
+        <li><a href="#p-sample-special"        >Special requirements</a></li>
+        <li><a href="#p-sample-reserve"        >Reserve Injector Characterization Lab</a></li>
       </ul>
 
-      <div id="p-env-tech" >
+      <div id="p-sample-samples" >
 <?php
-    $tabledef = array() ;
-
-    for ($i = 1; $i <= 3; $i++)
-        array_push($tabledef ,
-            array("{$i}", "env-tech-{$i}", '')) ;
-
-    array_push($tabledef ,
-        array('Other',                         "env-tech-other", '') ,
-        array('Reasons for prioritization',    "env-tech-descr", '') ,
-        array('Spatial Resol.',                "env-spatialres", '') ,
-        array('Energy Resol.',                 "env-energyres",  '') ,
-        array('Q-value', array(
-            array('Min',                       "env-minqval",    '') ,
-            array('Max',                       "env-maxqval",    ''))) ,
-
-//        array('Q-value: Min',                  "env-minqval",    '') ,
-//        array('Max',                           "env-maxqval",    '') ,
-        array('Sample-Detector Distance: Min', "env-mindetdist", '') ,    
-        array('Max',                           "env-maxdetdist", '')) ;
-
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-env-endstation" >
-<?php
-    $tabledef = array() ;
-
-    for ($i = 1; $i <= 3; $i++)
-        array_push($tabledef ,
-            array("{$i}", "env-endstation-{$i}", '')) ;
-
-    array_push($tabledef ,
-        array('Other',                      "env-endstation-other", '') ,
-        array('Reasons for prioritization', "env-endstation-descr", '')) ;
-    
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-env-samples" >
-<?php
-    $tabledef = array() ;
+    $tabledef = array () ;
 
     for ($i = 1; $i <= 10; $i++)
         array_push($tabledef ,
-            array("{$i}", "env-samples-{$i}", '')) ;
+            array("{$i}", "sample-samples-{$i}", '')) ;
 
     array_push($tabledef ,
-        array('Extra', "env-samples-descr", '')) ;
+        array('Additional sample info', "sample-samples-descr", '')) ;
     
     $tgen = new TableGenerator1 (
         $proposals, $contacts, $infos, $params, $tabledef) ;
 
     print $tgen->toHtml() ;
-?>
+?> 
       </div>
 
-      <div id="p-env-sampleenv" >
+      <div id="p-sample-env" >
 <?php
-    $tabledef = array (
-        array("Sample Environment", "env-sampleenv",       '') ,
-        array('Other',              "env-sampleenv-other", '')) ;
-    
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-env-temperature" >
-<?php
-    $tabledef = array (
-        array("Min", "env-min-temperature", '') ,
-        array('Max', "env-max-temperature", '')) ;
-    
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-env-samplehandling" >
-<?php
-            
-    $tabledef = array (
-        array("Fixed Target",                   "env-fixtarget",               '') ,
-        array("Scanning rate",                  "env-scanrate",                '') ,
-        array("Scanning speed",                 "env-scanspeed",               '') ,
-        array("Liquid Sample",    subcoldefs(3, "env-liquid-{$i}",             '')) ,
-        array("Gas Jet",          subcoldefs(4, "env-gas-{$i}",                '')) ,
-        array("Aerosol Injector",               "env-aerosol",                 '') ,
-        array("Other Injector",   subcoldefs(5, "env-injector-other-{$i}",     '')) ,
-        array("Reasons for prioritization",     "env-samplehandl-other-descr", '')) ;
-
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-env-spectro" >
-<?php
-    $tabledef = array() ;
-
-    for ($i = 1; $i <= 3; $i++)
-        array_push($tabledef ,
-            array("{$i}", "env-spectro-{$i}", '')) ;
+    $tabledef = array () ;
 
     array_push($tabledef ,
-        array('Other', "env-spectro-other", '') ,
-        array('Reasons for prioritization', "env-spectro-descr", '')) ;
+        array("Sample Environment", "sample-sampleenv",       '') ,
+        array('Other',              "sample-sampleenv-other", '')) ;
     
     $tgen = new TableGenerator1 (
         $proposals, $contacts, $infos, $params, $tabledef) ;
 
     print $tgen->toHtml() ;
-?>
+?> 
       </div>
 
-      <div id="p-env-diag" >
+      <div id="p-sample-delivery" >
 <?php
-    $tabledef = array() ;
-
-    for ($i = 1; $i <= 5; $i++)
-        array_push($tabledef ,
-            array("{$i}", "env-diag-{$i}", '')) ;
-
-    array_push($tabledef ,
-        array('Other',                      "env-diag-other", '') ,
-        array('Reasons for prioritization', "env-diag-descr", '')) ;
-    
-    $tgen = new TableGenerator1 (
-        $proposals, $contacts, $infos, $params, $tabledef) ;
-
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-env-userenv" >
-<?php
-    $tabledef = array() ;
+    $tabledef = array () ;
 
     for ($i = 1; $i <= 10; $i++)
         array_push($tabledef ,
-            array("{$i}", "env-userenv-{$i}", '')) ;
+            array("{$i}", "sample-deliverymethod-{$i}", '')) ;
+
+    array_push($tabledef ,
+        array('Other Method', "sample-deliverymethod-other", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-userequipment" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Status", "sample-userequipment", 'No')) ;
 
     $tgen = new TableGenerator1 (
         $proposals, $contacts, $infos, $params, $tabledef) ;
 
     print $tgen->toHtml() ;
-?>
+?> 
       </div>
 
-      <div id="p-env-lab" >
+      <div id="p-sample-reservoir" >
 <?php
-    $tabledef = array() ;
-    
-    for ($i = 1; $i <= 5; $i++)
+    $tabledef = array () ;
+
+    for ($i = 1; $i <= 10; $i++)
         array_push($tabledef ,
-            array("{$i}", "env-lab-{$i}", '')) ;
+            array("{$i}", "sample-reservoir-{$i}", '')) ;
 
     array_push($tabledef ,
-        array('Other', "env-lab-other", '')) ;
+        array('Other Reservoir', "sample-reservoir-other", '')) ;
     
     $tgen = new TableGenerator1 (
-        $proposals ,
-        $contacts ,
-        $infos ,
-        $params ,
-        $tabledef
-    ) ;
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
     print $tgen->toHtml() ;
-?>
+?> 
       </div>
 
-      <div id="p-env-other" >
-<?php    
-    $tabledef = array(
-        array("Information", "env-other", '')) ;
+      <div id="p-sample-temperature" >
+<?php
+    $tabledef = array () ;
 
+    array_push($tabledef ,
+        array("Min", "sample-min-temperature", '') ,
+        array('Max', "sample-max-temperature", '')) ;
+    
     $tgen = new TableGenerator1 (
-        $proposals ,
-        $contacts ,
-        $infos ,
-        $params ,
-        $tabledef
-    ) ;
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
     print $tgen->toHtml() ;
-?>
+?> 
+      </div>
+      
+      <div id="p-sample-pershift" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Estimated number", "sample-reservoir-pershift", '0')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-provided" >
+<?php
+    $tabledef = array () ;
+
+    for ($i = 1; $i <= 10; $i++)
+        array_push($tabledef ,
+            array("{$i}", "sample-provided-{$i}", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-amount" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Notes", "sample-sample-amount", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-reservoir-temp" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Temperature", "sample-reservoir-temp", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-nozzle" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Diameter", "sample-nozzle",       '') ,
+        array("Other",    "sample-nozzle-other", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-special" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Notes", "sample-special", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
+      </div>
+
+      <div id="p-sample-reserve" >
+<?php
+    $tabledef = array () ;
+
+    array_push($tabledef ,
+        array("Notes, dates, etc.", "sample-reserve", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals, $contacts, $infos, $params, $tabledef) ;
+
+    print $tgen->toHtml() ;
+?> 
       </div>
 
     </div>
-
   </div>
 
-  <div id="p-contr" >
-  </div>
-
-  <div id="p-data" >
+  <div id="p-detector" >
 
     <div id="tabs" class="inner" >
       <ul>
-        <li><a href="#p-data-dev-cam"     >Cameras</a></li>
-        <li><a href="#p-data-dev-digi"    >Digitizers</a></li>
-        <li><a href="#p-data-dev-encod"   >Encoders</a></li>
-        <li><a href="#p-data-dev-other"   >Other Device Needs</a></li>
-        <li><a href="#p-data-ana-online"  >Online (real-time) Analysis</a></li>
-        <li><a href="#p-data-ana-offline" >Offline Analysis</a></li>
+        <li><a href="#p-detector-device"      >Devices</a></li>
+        <li><a href="#p-detector-other"       >Other Detector Environment</a></li>
+        <li><a href="#p-detector-filter"      >Environment Filters</a></li>
+        <li><a href="#p-detector-orientation" >Non-standard Orientation</a></li>
       </ul>
-      
-      <div id="p-data-dev-cam" >
-<?php
-    $cameras = array() ;
-    
-    for ($i = 1; $i <= 9; $i++)
-        array_push($cameras ,
-            array("#",  "data-dev-cam-{$i}-qty",  '') ,
-            array("Type", "data-dev-cam-{$i}-type", '')) ;
 
-    $tabledef = array(
-        array('Cameras', $cameras) ,
-        array('Binning',             "data-dev-cam-binning",       'Standard') ,
-        array('Binning description', "data-dev-cam-binning-descr", '')) ;
-
-    $tgen = new TableGenerator1 (
-        $proposals ,
-        $contacts ,
-        $infos ,
-        $params ,
-        $tabledef
-    ) ;
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-data-dev-digi" >
-<?php
-    $digitizers = array() ;
-    for ($i = 1; $i <= 4; $i++)
-        array_push($digitizers ,
-            array("#",  "data-dev-digi-{$i}-qty",  '') ,
-            array("Type", "data-dev-digi-{$i}-type", '')) ;
- 
-    $tabledef = array(
-        array("Digitizers", $digitizers) ,
-        array("Channels", array(
-            array("@ 2 GS/s", "data-dev-digi-chan-2gs-qty",  '') ,
-            array("@ 4 GS/s", "data-dev-digi-chan-4gs-qty",  '') ,
-            array("@ 8 GS/s",  "data-dev-digi-chan-8gs-qty", ''))) ,
-        array("Comments",      "data-dev-digi-comments",     '')) ;
-
-    $tgen = new TableGenerator1 (
-        $proposals ,
-        $contacts ,
-        $infos ,
-        $params ,
-        $tabledef
-    ) ;
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-data-dev-encod" >
-<?php
-    $encoders = array() ;
-
-    for ($i = 1; $i <= 2; $i++)
-        array_push($encoders ,
-            array("#",  "data-dev-encod-{$i}-qty",  '') ,
-            array("Type", "data-dev-encod-{$i}-type", '')) ;
-
-    $tabledef = array(
-        array("Encoders", $encoders) ,
-        array("Comments", "data-dev-encod-comments", '')) ;
-
-    $tgen = new TableGenerator1 (
-        $proposals ,
-        $contacts ,
-        $infos ,
-        $params ,
-        $tabledef
-    ) ;
-    print $tgen->toHtml() ;
-?>
-      </div>
-
-      <div id="p-data-dev-other" >
+      <div id="p-detector-device" >
 <?php
     $devices = array() ;
-
-    for ($i = 1; $i <= 5; $i++)
+    
+    for ($i = 1; $i <= 9; $i++) {
         array_push($devices ,
-            array("#",  "data-dev-other-{$i}-qty",   '') ,
-            array("Type", "data-dev-other-{$i}-descr", '')) ;
-
+            array("Type",   "detector-slac-{$i}-type",  '') ,
+            array("#",      "detector-slac-{$i}-qty",    '0') ,
+            array("Env",    "detector-slac-{$i}-env",    '') ,
+            array("Orient", "detector-slac-{$i}-orient", '')) ;
+    }
     $tabledef = array(
-        array("Devices", $devices) ,
-        array("Comments", "data-dev-other-comments", '')) ;
+        array('Device', $devices)) ;
 
     $tgen = new TableGenerator1 (
         $proposals ,
@@ -1087,15 +1092,11 @@ $(function () {
 ?>
       </div>
 
-      
-      <div id="p-data-ana-online" >
+      <div id="p-detector-other" >
 <?php
+
     $tabledef = array(
-        array("Number of Monitoring nodes", array(
-            array("AMI",          "data-ana-ami",      '') ,
-            array("psana-python", "data-ana-psana",    '') ,
-            array("user code",    "data-ana-user",     ''))) ,
-        array("Comments",         "data-ana-comments", '')) ;
+        array('Comments', "detector-slac-other", '')) ;
 
     $tgen = new TableGenerator1 (
         $proposals ,
@@ -1108,12 +1109,11 @@ $(function () {
 ?>
       </div>
 
-      <div id="p-data-ana-offline" >
+      <div id="p-detector-filter" >
 <?php
+
     $tabledef = array(
-        array("Assistance is needed", "data-ana-assist",   '') ,
-        array("Computing Resources",  "data-ana-location", 'LCLS/SLAC') ,
-        array("Comments",             "data-ana-other",    '')) ;
+        array('Comments', "detector-slac-filters", '')) ;
 
     $tgen = new TableGenerator1 (
         $proposals ,
@@ -1125,7 +1125,255 @@ $(function () {
     print $tgen->toHtml() ;
 ?>
       </div>
+
+      <div id="p-detector-orientation" >
+<?php
+
+    $tabledef = array(
+        array('Comments', "detector-slac-orient", '')) ;
+
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
     </div>
+  </div>
+
+  <div id="p-daq" >
+
+    <div id="tabs" class="inner" >
+      <ul>
+        <li><a href="#p-daq-device"  >Devices</a></li>
+        <li><a href="#p-daq-comment" >Comments</a></li>
+      </ul>
+      
+      <div id="p-daq-device" >
+<?php
+    $devices = array() ;
+    
+    for ($i = 1; $i <= 20; $i++)
+        array_push($devices ,
+            array("#",    "data-dev-{$i}-qty",   '0') ,
+            array("Name", "data-dev-{$i}-descr", '')) ;
+
+    $tabledef = array(
+        array('Device', $devices)) ;
+
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-daq-comment" >
+<?php
+
+    $tabledef = array(
+        array('Comments', "data-comment", '')) ;
+
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+        </div>
+      </div>
+  </div>
+
+  <div id="p-data-online" >
+<?php
+    $tabledef = array(
+        array("Shared memory Analysis?",        "data-online-shmem",          'No') ,
+        array("Comments or other requirements", "data-online-shmem-comments", '')) ;
+
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+  </div>
+
+  <div id="p-data-offline" >
+<?php
+    $tabledef = array(
+        array("Assistance is needed", "data-offline-ana-assist",   'No') ,
+        array("Computing Resources",  "data-offline-ana-location", 'LCLS/SLAC') ,
+        array("Comments",             "data-offline-ana-other",    '')) ;
+
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+  </div>
+
+  <div id="p-user" >
+
+    <div id="tabs" class="inner" >
+      <ul>
+        <li><a href="#p-user-laser"     >Laser Equipment</a></li>
+        <li><a href="#p-user-sampleenv" >Sample injector/environment</a></li>
+        <li><a href="#p-user-detectors" >Detectors</a></li>
+        <li><a href="#p-user-controls"  >Controls Equipment</a></li>
+        <li><a href="#p-user-misc"      >Miscellaneous</a></li>
+      </ul>
+      
+      <div id="p-user-laser" >
+<?php
+    $tabledef = array() ;
+    
+    for ($i = 1; $i <= 10; $i++)
+        array_push($tabledef ,
+            array("{$i}", "user-laser-{$i}", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-user-sampleenv" >
+<?php
+    $tabledef = array() ;
+    
+    for ($i = 1; $i <= 10; $i++)
+        array_push($tabledef ,
+            array("{$i}", "user-sampleenv-{$i}", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-user-detectors" >
+<?php
+    $tabledef = array() ;
+    
+    for ($i = 1; $i <= 10; $i++)
+        array_push($tabledef ,
+            array("{$i}", "user-detectors-{$i}", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-user-controls" >
+<?php
+    $tabledef = array() ;
+    
+    for ($i = 1; $i <= 10; $i++)
+        array_push($tabledef ,
+            array("{$i}", "user-controls-{$i}", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+      <div id="p-user-misc" >
+<?php
+    $tabledef = array() ;
+    
+    for ($i = 1; $i <= 10; $i++)
+        array_push($tabledef ,
+            array("{$i}", "user-misc-{$i}", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="p-pre" >
+<?php
+    $tabledef = array() ;
+    
+    array_push($tabledef ,
+        array("Notes", "pre-notes", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
+  </div>
+
+  <div id="p-post" >
+<?php
+    $tabledef = array() ;
+    
+    array_push($tabledef ,
+        array("Notes", "post-notes", '')) ;
+    
+    $tgen = new TableGenerator1 (
+        $proposals ,
+        $contacts ,
+        $infos ,
+        $params ,
+        $tabledef
+    ) ;
+    print $tgen->toHtml() ;
+?>
   </div>
 
 </div>

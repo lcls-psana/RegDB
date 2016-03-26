@@ -11,6 +11,12 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-02
+2016-03-25 Igor Gaponenko
+- the final implementation of the Run 14 progress monitoring application
+- the final implementation of the Run 14 proposal reports application
+- acceslerated access to URAWI in all 3 Run 13 applications
+
 Tag: V00-03-01
 2016-03-24 Igor Gaponenko
 - the final implementation of the Run 14 Questionnairy.
