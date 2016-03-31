@@ -6,10 +6,6 @@
         <group name="PCDS Web Apps">
             <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/regdbexperiment.class.php</file>
         </group>
-        <group>
-            <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/html/run14_proposal_reports.php</file>
-            <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/html/run14_proposal_catalog_status.php</file>
-            <file>file:/Users/gapon/SLAC_AFS/lcls/releases/pswww-apps-dev/RegDB/web/html/run14_proposal_questionnaire.php</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>
