@@ -102,6 +102,36 @@ class RegDBExperiment {
         return $this->instrument()->is_mobile();
     }
 
+    public function proposalNo () {
+
+        $proposal_param = $this->find_param_by_name('PROPOSAL');
+        if ($proposal_param) return $proposal_param->value();
+        
+        // Otherwise try to deduce the proposal number from the name of
+        // the experimnt. The general scheme is based on the following naming
+        // convention for LCLS experiment:
+        //
+        //   IIIpppYY
+        //
+        // Where:
+        //
+        //   III - the instrument TLA
+        //   ppp - the proposal nyumber after 'L' (or any other letter)
+        //   YY  - the last two numbers of a year when the proposal takes its first run
+        //
+        // ATTENTION:
+        // 
+        //   This scheme has three problems:
+        //   
+        //   - older LCS experiments don't have any proposals in URAWI
+        //   - older internal (in-house) experiments don't have any proposals in URAWI
+        //   - newer (as of 2016) naming convention allows proposals to begin with
+        //     any letters such as 'L' (user), 'X' (in-house), 'S' (screening).
+        //     This creates an ambiguity.
+        //     
+        return "L".strtoupper(substr($this->name(), 3, 3)) ;
+    }
+
     /* =============
      *   MODIFIERS
      * =============

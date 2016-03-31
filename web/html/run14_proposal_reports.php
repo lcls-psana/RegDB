@@ -561,8 +561,10 @@ $(function () {
         array('Q-value', array(
             array('Min',                       "xraytech-minqval",    '') ,
             array('Max',                       "xraytech-maxqval",    ''))) ,
-        array('Sample-Detector Distance: Min', "xraytech-mindetdist", '') ,
-        array('Max',                           "xraytech-maxdetdist", '')) ;
+        array('Sample-Detector Distance', array(
+            array("Min", "xraytech-mindetdist", '') ,
+            array('Max', "xraytech-maxdetdist", '')))
+    ) ;
 
     $tgen = new TableGenerator1 (
         $proposals, $contacts, $infos, $params, $tabledef) ;
@@ -1069,17 +1071,19 @@ $(function () {
 
       <div id="p-detector-device" >
 <?php
-    $devices = array() ;
-    
+
+    $tabledef = array() ;
     for ($i = 1; $i <= 9; $i++) {
-        array_push($devices ,
-            array("Type",   "detector-slac-{$i}-type",  '') ,
-            array("#",      "detector-slac-{$i}-qty",    '0') ,
-            array("Env",    "detector-slac-{$i}-env",    '') ,
-            array("Orient", "detector-slac-{$i}-orient", '')) ;
+        array_push($tabledef, array (
+            "{$i}" ,
+            array (
+                array("Qty",    "detector-slac-{$i}-qty",    '0') ,
+                array("Type",   "detector-slac-{$i}-type",   '') ,
+                array("Env",    "detector-slac-{$i}-env",    '') ,
+                array("Orient", "detector-slac-{$i}-orient", '')
+            ))
+        ) ;
     }
-    $tabledef = array(
-        array('Device', $devices)) ;
 
     $tgen = new TableGenerator1 (
         $proposals ,
@@ -1155,16 +1159,16 @@ $(function () {
       </ul>
       
       <div id="p-daq-device" >
-<?php
-    $devices = array() ;
-    
+<?php    
+    $tabledef = array() ;
     for ($i = 1; $i <= 20; $i++)
-        array_push($devices ,
-            array("#",    "data-dev-{$i}-qty",   '0') ,
-            array("Name", "data-dev-{$i}-descr", '')) ;
-
-    $tabledef = array(
-        array('Device', $devices)) ;
+        array_push($tabledef, array (
+            "{$i}" ,
+            array (
+                array("Qty",  "data-dev-{$i}-qty",   '0') ,
+                array("Name", "data-dev-{$i}-descr", '')
+            ))
+        ) ;
 
     $tgen = new TableGenerator1 (
         $proposals ,

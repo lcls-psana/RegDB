@@ -11,6 +11,11 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-03
+2016-03-31 Igor Gaponenko
+- minor changes in the Run 14 Questionnaires: list fo proposals, release
+date, table collumn groupping in the Reports
+
 Tag: V00-03-02
 2016-03-25 Igor Gaponenko
 - the final implementation of the Run 14 progress monitoring application

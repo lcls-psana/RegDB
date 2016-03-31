@@ -763,7 +763,7 @@ $(function () {
   <ul>
     <li>Please fill this form in collaboration with the LCLS point of contact for your experiment.</li>
     <li>All your modifications will be automatically recorded in a database as you'll be making them</li>
-    <li>The input must be provided before a deadline of <span class="important">2016-04-11</span> after
+    <li>The input must be provided before a deadline of <span class="important">2016-04-13</span> after
         which further changes of the experimental requirements will require LCLS Management approval</li>
   </ul>
 </div>
