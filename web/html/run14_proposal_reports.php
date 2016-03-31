@@ -864,7 +864,11 @@ $(function () {
 
     for ($i = 1; $i <= 10; $i++)
         array_push($tabledef ,
-            array("{$i}", "sample-samples-{$i}", '')) ;
+            array("{$i}", array (
+                array("prio", "sample-samples-{$i}", '') ,
+                array("name", "sample-samples-{$i}", ''))
+            )
+         ) ;
 
     array_push($tabledef ,
         array('Additional sample info', "sample-samples-descr", '')) ;
@@ -897,10 +901,15 @@ $(function () {
 
     for ($i = 1; $i <= 10; $i++)
         array_push($tabledef ,
-            array("{$i}", "sample-deliverymethod-{$i}", '')) ;
+            array("{$i}", array (
+                array("prio", "sample-deliverymethod-{$i}", '') ,
+                array("name", "sample-deliverymethod-{$i}", ''))
+            )
+        ) ;
 
     array_push($tabledef ,
-        array('Other Method', "sample-deliverymethod-other", '')) ;
+        array('Other Method', "sample-deliverymethod-other", '')
+    ) ;
     
     $tgen = new TableGenerator1 (
         $proposals, $contacts, $infos, $params, $tabledef) ;
@@ -1204,6 +1213,7 @@ $(function () {
 <?php
     $tabledef = array(
         array("Shared memory Analysis?",        "data-online-shmem",          'No') ,
+        array("Monitoring Quantities",          "data-online-qty",            '') ,
         array("Comments or other requirements", "data-online-shmem-comments", '')) ;
 
     $tgen = new TableGenerator1 (
@@ -1222,6 +1232,7 @@ $(function () {
     $tabledef = array(
         array("Assistance is needed", "data-offline-ana-assist",   'No') ,
         array("Computing Resources",  "data-offline-ana-location", 'LCLS/SLAC') ,
+        array("Data Analysis Plan",   "data-offline-ana-plan",     '') ,
         array("Comments",             "data-offline-ana-other",    '')) ;
 
     $tgen = new TableGenerator1 (

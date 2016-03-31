@@ -974,7 +974,9 @@ HERE;
           <td class="prio  border1"  >&nbsp;</td>
           <td class="val   border1"   ><?=textarea($sect.'-energy-descr')?></td>
           <td class="unit  border1"  >&nbsp;</td>
-          <td class="instr border1" >Describe reason for multiple energies and prioritization</td>
+          <td class="instr border1" >
+            Describe reason for multiple energies and prioritization.
+            Indicate which energies are must-have for the success of the experiment.</td>
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
@@ -1730,16 +1732,16 @@ HERE;
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "Samples" : "&nbsp;")?></td>
-          <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-samples-'.$i)?></td>
+          <td class="prio"                      ><?=select_quantity($sect.'-samples-'.$i.'-prio')?></td>
+          <td class="val"                       ><?=input          ($sect.'-samples-'.$i        )?></td>
           <td class="unit             noborder" >&nbsp;</td>
           <td class="instr            noborder" ><?=($i === 1 ? "List all samples you intend to measure during your beamline" : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
           <td class="item noborder"  >&nbsp;</td>
-          <td class="prio"  >&nbsp;</td>
-          <td class="val"   ><?=input($sect.'-samples-10')?></td>
+          <td class="prio"           ><?=select_quantity($sect.'-samples-10-prio')?></td>
+          <td class="val"            ><?=input          ($sect.'-samples-10'     )?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >&nbsp;</td>
         </tr>
@@ -1748,7 +1750,10 @@ HERE;
           <td class="prio  border1" >&nbsp;</td>
           <td class="val   border1" ><?=textarea($sect.'-samples-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
-          <td class="instr border1" >Provide additional sample information here if needed.</td>
+          <td class="instr border1" >
+            Provide additional sample information here if needed.
+            Indicate which samples are must-have for the success of the experiment.
+          </td>
         </tr>
         <tr>
           <td class="item item_group noborder" >Sample Environment</td>
@@ -1767,8 +1772,8 @@ HERE;
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "Sample delivery method" : "&nbsp;")?></td>
-          <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=sample_delivery_method($sect.'-deliverymethod-'.$i)?></td>
+          <td class="prio             noborder" ><?=select_quantity       ($sect.'-deliverymethod-'.$i.'-prio')?></td>
+          <td class="val"                       ><?=sample_delivery_method($sect.'-deliverymethod-'.$i       )?></td>
           <td class="unit             noborder" >&nbsp;</td>
           <td class="instr            noborder" ><?=($i === 1 ? "What general sample delivery method is required for your experiment?  If multiple, specify all.
 " : "&nbsp;")?></td>
@@ -1776,7 +1781,7 @@ HERE;
 <?php } ?>
         <tr>
           <td class="item noborder"  >&nbsp;</td>
-          <td class="prio"  >&nbsp;</td>
+          <td class="prio"  ><?=select_quantity       ($sect.'-deliverymethod-10-prio')?></td>
           <td class="val"   ><?=sample_delivery_method($sect.'-deliverymethod-10')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >&nbsp;</td>
@@ -1786,7 +1791,10 @@ HERE;
           <td class="prio  border1"  >&nbsp;</td>
           <td class="val   border1"   ><?=textarea($sect.'-deliverymethod-other')?></td>
           <td class="unit  border1"  >&nbsp;</td>
-          <td class="instr border1" >If Other, describe</td>
+          <td class="instr border1" >
+            If Other, describe.
+            Indicate which methods are must-have for the success of the experiment.
+          </td>
         </tr>
 
         <tr>
@@ -2198,10 +2206,21 @@ HERE;
     <div class="data-sect" >
 
       <div class="comments">
-        <p>LCLS provides two software frameworks (AMI and psana-python) to analyze
-           data on-the-fly as it is being taken.  If you will be using user-supplied
-           software (in addition to AMI and psana) to perform real-time analysis
-           against data in shared memory, please list the software package(s) below.</p>
+        <p>LCLS provides two software frameworks (<b>AMI</b> and <b>psana-python</b>)
+           to analyze data on-the-fly as data are being acquired.
+        </p>
+        <p>More information can be found here:</p>
+        <ul>
+          <li>
+            <a class="link"
+               target=_blank"
+               href="https://confluence.slac.stanford.edu/display/PCDS/Prompt+Analysis" >LCLS Prompt Analysis</a>
+          </li>
+        </ul>
+        <p>If you will be using user-supplied software (in addition to <b>AMI</b> and 
+           <b>psana</b>) to perform real-time analysis against data in shared memory, 
+           please list the software package(s) below.</p>
+
       </div>
       <table class="analysis" >
         <thead>
@@ -2213,14 +2232,27 @@ HERE;
         </thead>
         <tbody>
           <tr>
-            <td class="item  border1" >Shared memory Analysis?</td>
-            <td class="val   border1" ><?=data_online_shared($sect.'-shmem')?></td>
-            <td class="instr border1" >&nbsp;</td>
+            <td class="item  noborder" >Shared memory Analysis?</td>
+            <td class="val   "         ><?=data_online_shared($sect.'-shmem')?></td>
+            <td class="instr "         >&nbsp;</td>
           </tr>
           <tr>
-            <td class="item  border1" >Comments or other requirements</td>
-            <td class="val   border1" ><?=textarea($sect.'-shmem-comments')?></td>
-            <td class="instr border1" >
+            <td class="item  noborder" >Monitoring Quantities</td>
+            <td class="val   "         ><?=textarea($sect.'-qty')?></td>
+            <td class="instr "         >
+              List which physical quantities/parameters provide indication 
+              that the experiment is collecting good data (e.g., <b>spectra</b>,
+              <b>crystallography indexing rates</b>, <b>femtosecond pulse lasing-time-structure using “XTCAV”</b>,
+              <b>pump-probe timing</b>, etc.).
+              Also indicate which core tools/algorithms are needed to operate/redirect
+              the experiment (e.g., <b>hit rates</b>, <b>spectra</b>, <b>constant-fraction discriminators</b>,
+              <b>tools to “scan” to optimize experimental setup</b>, <b>online photon finding</b>, etc.).
+            </td>
+          </tr>
+          <tr>
+            <td class="item  noborder" >Comments or other requirements</td>
+            <td class="val   "         ><?=textarea($sect.'-shmem-comments')?></td>
+            <td class="instr "         >
               Please list the user-supplied software that you would
               like to use for real-time analysis against data in shared memory here.
               Otherwise indicate if you would like further assistance from us (explaining
@@ -2267,20 +2299,34 @@ HERE;
         </thead>
         <tbody>
           <tr>
-            <td class="item noborder" >Assistance is needed?</td>
-            <td class="val"           ><?=yes_no($sect.'-ana-assist')?></td>
-            <td class="instr"         >Indicate <b>Yes</b> if you like someone from the analysis group
-                                       to contact you before your experiment (highly recommended for
-                                       first-time LCLS users)</td>
+            <td class="item  noborder" >Assistance is needed?</td>
+            <td class="val   "         ><?=yes_no($sect.'-ana-assist')?></td>
+            <td class="instr "         >
+              Indicate <b>Yes</b> if you like someone from the analysis group
+              to contact you before your experiment (highly recommended for
+              first-time LCLS users)
+            </td>
           <tr>
-            <td class="item noborder" >Computing Resources</td>
-            <td class="val"           ><?=data_primary_location($sect.'-ana-location')?></td>
-            <td class="instr"         >Indicate where you're planning to analyze your data.
-                                       If you're planing to use NERSC supercomputers to do your
-                                       analysis then you may need to contact us ahead of time to
-                                       get help with setting up a computer account at NERSC.</td>
+            <td class="item  noborder" >Computing Resources</td>
+            <td class="val   "         ><?=data_primary_location($sect.'-ana-location')?></td>
+            <td class="instr "         >
+              Indicate where you're planning to analyze your data.
+              If you're planing to use NERSC supercomputers to do your
+              analysis then you may need to contact us ahead of time to
+              get help with setting up a computer account at NERSC.
+            </td>
           </tr>
-            <tr>
+          <tr>
+            <td class="item  noborder" >Data Analysis Plan</td>
+            <td class="val   "         ><?=textarea($sect.'-ana-plan')?></td>
+            <td class="instr "         >
+              Indicate which frameworks (e.g., <b>psana-python</b>, <b>cheetah</b>/<b>crystfel</b>, 
+              <b>cctbx</b>, <b>matlab</b>, etc.) and algorithms (e.g., <b>crystallography</b>,
+              <b>photon-finding or counting</b>, <b>pump-probe timing</b>, <b>image integration</b>, etc.)
+              you plan on using to analyze your data.
+            </td>
+          </tr>
+          <tr>
             <td class="item  noborder" >&nbsp;</td>
             <td class="val"            ><?=textarea($sect.'-ana-other')?></td>
             <td class="instr"          >Comments about your offline data analysis needs</td>
