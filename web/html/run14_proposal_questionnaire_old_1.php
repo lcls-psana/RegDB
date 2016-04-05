@@ -24,28 +24,34 @@ HERE;
 \DataPortal\Service::set_custom_error_handler(new EventHandler()) ;
 
 \DataPortal\Service::run_handler ('GET', function ($SVC) {
-    
+
     $proposalNo = $SVC->required_str('proposal') ;
 
     $info = $SVC->safe_assign(
         $SVC->urawi()->proposalInfo($proposalNo) ,
         "No such proposal found: {$proposalNo}. Did yoy miss the letter 'L' at the begining of the proposal?") ;
 
-    $experimentName = $info->posix_group('2016-03-24') ;
-    $exper = $SVC->safe_assign(
-        $SVC->regdb()->find_experiment_by_unique_name($experimentName) ,
-        "We're sorry - this proposal is not found in our system") ;
+    $lcls_contacts = $SVC->regdb()->getProposalContacts_Run14() ;
 
-    $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Editor') ;
-    $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), $exper->id(), 'ExperimentInfo', 'Reader') ;
-    $SVC->assert(
-        $is_editor || $is_reader ,
-        "We're sorry - you're not authorized to view/modify this document") ;
+    $urawi_authentication = $SVC->authdb()->authName() == '' ;
+    if ($urawi_authentication) {
 
-    $contacts = array (
-        "X001" => '&lt;TBD&gt;'
-    ) ;
+        // The URAWI authentication dialog will be enforced later on
+        // in the application.
         
+        $is_editor = false ;    // this will be set later on upon a successful completion
+                                // of the URAWI authentication.
+
+    } else {
+
+        // Check authorizations for LCLS personell logged via the WebAuth
+        // authentication system.
+        $is_editor = $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Editor') ;
+        $is_reader = $SVC->authdb()->hasRole($SVC->authdb()->authName(), null, 'ExperimentInfo', 'Reader') ;
+        $SVC->assert(
+            $is_editor || $is_reader ,
+            "We're sorry - you're not authorized to view/modify this document") ;
+    }        
 ?>
 
 <!doctype html>
@@ -62,11 +68,69 @@ body {
     padding:    0;
 }
 
+
+body {
+    margin:     0;
+    padding:    0;
+}
+div.visible {
+    display:    block;
+}
+div.hidden {
+    display:    none;
+}
+#auth {
+    padding:    20px;
+    position:   absolute;
+    left:   30%;
+    top:    5%;
+    font-family:    'Segoe UI',Tahoma,Helvetica,Arial,Verdana,sans-serif;
+    font-size:      13px;
+}
+#auth #title {
+    margin-bottom:  10%;
+    font-size:      42px;
+    font-weight:    bold;
+}
+#auth > h1 {
+    margin-left:    64px;
+    font-size:      20px;
+}
+#auth > #hint {
+    margin-left:    84px;
+    margin-bottom:  25px;
+    width:  440px;
+}
+#auth .name {
+    width:          72px;
+    margin-left:    96px;
+    padding-top:    4px;
+    font-weight:    bold;
+}
+#auth .value > input {
+    width:      156px;
+    padding:    4px;
+}
+#auth .button {
+    margin-left:    20px;
+}
+#auth .name ,
+#auth .value ,
+#auth .button {
+    margin-bottom:  5px;
+}
+#auth .last {
+    margin-bottom:  15px;
+}
+
+#body {
+    padding:    20px;
+}
+
 #proposal {
     padding:        20px;
     padding-left:   30px;
     padding-bottom:  5px;
-    border-top:  solid 1px #c0c0c0;
 
     font-family:    'Segoe UI',Tahoma,Helvetica,Arial,Verdana,sans-serif;
     font-size:  20px;
@@ -90,8 +154,6 @@ body {
     padding:        20px;
     padding-bottom:  5px;
     max-width:      640px;
-/*    border-top:     solid 1px #c0c0c0;*/
-/*    border-left:    solid 1px #c0c0c0;*/
 
     font-family:    'Segoe UI',Tahoma,Helvetica,Arial,Verdana,sans-serif;
     font-size:      15px;
@@ -424,6 +486,36 @@ table.analysis > tbody td.instr {
     margin-bottom:  10px;
 }
 
+
+/*************************************************
+ * Overload default styles for JQuery UI buttons *
+ *************************************************/
+
+button.control-button,
+label.control-label {
+    font-size:  10px !important;
+    color:      black !important;
+}
+button.control-button-important {
+    color:      red !important;
+}
+button.control-button-small {
+    font-size:  9px !important;    
+}
+
+button {
+    background: rgba(240, 248, 255, 0.39) !important;
+    border-radius: 2px !important;
+}
+
+a.link {
+    text-decoration:    none    !important;
+    font-weight:        bold    !important;
+    color:              #0071bc !important;
+}
+a:hover, a.link:hover {
+  color: red;
+}
 </style>
 
 <link type="text/css" href="/jquery/css/custom-theme-1.9.1/jquery-ui.custom.css" rel="Stylesheet" />
@@ -434,10 +526,13 @@ table.analysis > tbody td.instr {
 <script>
 
 var proposal = '<?=$proposalNo?>' ;
-var exper_id = <?=$exper->id()?> ;
+var proposal_spokesPerson_personId = <?=$info->contact()->personId()?> ;
 
-var is_editor = <?=$is_editor ? 'true' : 'false'?> ;
-var is_reader = <?=$is_reader ? 'true' : 'false'?> ;
+var urawi_authentication = <?=($urawi_authentication ? 1 : 0)?> ;
+var urawi_personId       = 0 ;
+var urawi_contact        = '<?=$info->contact()->name()?>' ;
+
+var is_editor = <?=$is_editor ? 1 : 0?> ;
 
 function _pad (n) {
     return (n < 10 ? '0' : '') + n ;
@@ -458,63 +553,75 @@ function updateStatus (s) {
     $('#status').html(s) ;
 }
 
-function saveProposalParameter (id, val) {
-    var url    = '../regdb/ws/run14_proposal_save.php' ;
-    var params = {
-        proposal: proposal ,
-        exper_id: exper_id ,
-        id:       id ,
-        val:      val
-    } ;
+function WebService_POST (url, params, on_success, on_failure) {
     var jqXHR  = $.post (
         url ,
         params ,
         function(data) {
-            var result = eval(data) ;
-            if (result.status != 'success') {
-                alert('the Web service reported the following problem with the request: '+result.message) ;
-                return ;
+            if (data.status === 'success') {
+                on_success(data) ;
+            } else {
+                on_failure(data.message) ;
             }
+        } ,
+        'JSON'
+    ).error(function () {
+        on_failure('operation failed because of: '+jqXHR.statusText) ;
+    }) ;
+}
+
+function saveProposalParameter (id, val) {
+
+    WebService_POST (
+        'ws/urawi_proposal_save.php' ,
+        {   proposal: proposal ,
+            id:  id ,
+            val: val ,
+            urawi_authentication: urawi_authentication ,
+            urawi_personId:       urawi_personId ,
+            urawi_contact:        urawi_contact
+        } ,
+        function (data) {
             var p = data.proposal ;
             var msec = p.modified_time / 1000000 ;
             var t = new Date(msec) ;
             var s = time2htmlLocal(t) ;
-            updateStatus('[ Last update: <b>'+s+'</b> &nbsp;by user: <b>'+p.modified_uid+'</b> ]') ;
+            updateStatus('[ Last update on: <b>'+s+'</b> &nbsp;by: <b>'+p.modified_uid+'</b> ]') ;
         } ,
-        'JSON'
-    ).error(function () {
-        alert('operation failed because of: '+jqXHR.statusText) ;
-    }) ;
+        function (errmsg) {
+            alert(errmsg) ;
+        }
+    ) ;
 }
+
 function getProposalParameters (on_success) {
-    var url    = '../regdb/ws/run14_proposal_get.php' ;
-    var params = {
-        proposal: proposal ,
-        exper_id: exper_id
-    } ;
-    var jqXHR  = $.get (
-        url ,
-        params ,
+
+    WebService_POST (
+        'ws/urawi_proposal_get.php' ,
+        {   proposal: proposal ,
+            urawi_authentication: urawi_authentication ,
+            urawi_personId:       urawi_personId
+        } ,
         function(data) {
-            var result = eval(data) ;
-            if (result.status != 'success') {
-                alert('the Web service reported the following problem with the request: '+result.message) ;
-                return ;
-            }
             on_success(data.params) ;
         } ,
-        'JSON'
-    ).error(function () {
-        alert('operation failed because of: '+jqXHR.statusText) ;
-    }) ;
-}    
-$(function () {
+        function (errmsg) {
+            alert(errmsg) ;
+        }
+    ) ;
+}
+
+function on_authenticated () {
+
+    $('#auth').removeClass('visible').addClass('hidden') ;
+    $('#body').removeClass('hidden') .addClass('visible') ;
+
     $('#tabs').tabs() ;
 
     if (!is_editor) {
-        $('select'  ).attr('disabled', 'disabled') ;
-        $('input'   ).attr('disabled', 'disabled') ;
-        $('textarea').attr('disabled', 'disabled') ;
+        $('select'           ).attr('disabled', 'disabled') ;
+        $('input.value2store').attr('disabled', 'disabled') ;
+        $('textarea'         ).attr('disabled', 'disabled') ;
     } else {
         $('select').change(function () {
             var elem = $(this) ,
@@ -522,7 +629,7 @@ $(function () {
                 val  = elem.val() ;
             saveProposalParameter(id, val) ;
         }) ;
-        $('input').change(function () {
+        $('input.value2store').change(function () {
             var elem = $(this) ,
                 id   = elem.attr('id') ,
                 val  = elem.val() ;
@@ -557,12 +664,90 @@ $(function () {
         }
     }) ;
     updateStatus('[ No data submitted for the proposal ]') ;
+}
+
+$(function () {
+    if (urawi_authentication) {
+        var auth           = $('#auth') ,
+            login_button   = auth.find('button#login').button() ,
+            username_input = auth.find('input#username') ,
+            password_input = auth.find('input#password') ,
+            body           = $('#body') ;
+
+        login_button  .prop("disabled", false) ;
+        username_input.prop("disabled", false) ;
+        password_input.prop("disabled", false) ;
+
+        function on_authentication_error (errmsg) {
+            alert(errmsg) ;
+            login_button  .prop("disabled", false) ;
+            username_input.prop("disabled", false) ;
+            password_input.prop("disabled", false) ;
+        }
+        login_button.click(function () {
+
+            login_button  .prop("disabled", true) ;
+            username_input.prop("disabled", true) ;
+            password_input.prop("disabled", true) ;
+
+            WebService_POST (
+                'ws/urawi_auth.php' ,
+                {   username: username_input.val() ,
+                    password: password_input.val()
+                } ,
+                function (data) {
+                    urawi_personId = data.personId ;
+                    if (!urawi_personId) {
+                        on_authentication_error("You don't seem to have a valid URAWI account") ;
+                        return ;
+                    }
+                    if (proposal_spokesPerson_personId != urawi_personId) {
+                        on_authentication_error (
+                            "You don't have access privileges to view/edit the questionnaire for this proposal. " +
+                            "Error code: '"+proposal_spokesPerson_personId+":"+urawi_personId+"'") ;
+                        return ;
+                    }
+                    is_editor = 1 ;
+                    on_authenticated() ;
+                } ,
+                on_authentication_error
+            ) ;
+        }) ;
+    } else {
+        on_authenticated() ;
+    }
 }) ;
 
 </script>
 
 </head>
 <body>
+
+<div id="auth" class="visible" >
+
+    <center>
+      <div id="title">LCLS Run 14 Proposal : <?=$proposalNo?></div>
+    </center>
+
+    <h1>Spokesperson login with the LCLS User Portal credentials</h1>
+    <div id="hint">
+      This is the same login used for submitting your proposal. Usually that would be your e-mail address.
+      If you can't remember you password then follow the
+      <a class="link" target="_blank" href="https://www-ssrl.slac.stanford.edu/URAWI/forgottenPasswordForm.html">&lt;password reset link&gt;</a>
+    </div>
+    <div class="name"  style="float:left;" >Account</div>
+    <div class="value" style="float:left;" ><input id="username" type="text"     size="16" /></div>
+    <div style="clear:both;"></div>
+
+    <div class="name   last" style="float:left;" >Password</div>
+    <div class="value  last" style="float:left;" ><input id="password" type="password" size="16" /></div>
+    <div class="button last" style="float:left;" ><button id="login" class="control-button" >LOGIN</button></div>
+    <div style="clear:both;" ></div>
+
+    <h1>LCLS personnel should follow this <a class="link" href="https://pswww.slac.stanford.edu/apps-dev/regdb/run14_proposal_questionnaire?proposal=<?=$proposalNo?>" >&lt;login link&gt;</a></h1>
+</div>
+
+<div id="body" class="hidden" >
 
 <div id="proposal" style="float:left;" >
 
@@ -579,7 +764,7 @@ $(function () {
     <div class="end" ></div>
 
     <div class="key" >LCLS Contact:</div>
-    <div class="val" ><?=$contacts[$proposalNo]?></div>
+    <div class="val" ><?=$lcls_contacts[$proposalNo]?></div>
     <div class="end" ></div>
 
 </div>
@@ -589,7 +774,7 @@ $(function () {
   <ul>
     <li>Please fill this form in collaboration with the LCLS point of contact for your experiment.</li>
     <li>All your modifications will be automatically recorded in a database as you'll be making them</li>
-    <li>The input must be provided before a deadline of <span class="important">2016-XX-XX</span> after
+    <li>The input must be provided before a deadline of <span class="important">2016-04-13</span> after
         which further changes of the experimental requirements will require LCLS Management approval</li>
   </ul>
 </div>
@@ -713,7 +898,7 @@ HERE;
 
     function input ($id) {
         $str =<<<HERE
-<input id="{$id}" type="text" width="32" />
+<input id="{$id}" class="value2store" type="text" width="32" />
 HERE;
         return $str ;
     }
@@ -800,7 +985,9 @@ HERE;
           <td class="prio  border1"  >&nbsp;</td>
           <td class="val   border1"   ><?=textarea($sect.'-energy-descr')?></td>
           <td class="unit  border1"  >&nbsp;</td>
-          <td class="instr border1" >Describe reason for multiple energies and prioritization</td>
+          <td class="instr border1" >
+            Describe reason for multiple energies and prioritization.
+            Indicate which energies are must-have for the success of the experiment.</td>
         </tr>
 <?php for ($i = 1; $i <= 5; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
         <tr>
@@ -1010,7 +1197,9 @@ HERE;
   <div id="xraytech" >
 
     <div class="comments">
-      Instructions for this sections are to be defined.
+      This section covers many of the hutch specific parameters you need for
+      your experiment. If the desired configurations are not listed, please
+      describe with more details in the <b>Other X-ray Requirements</b> field.
     </div>
 
     <table class="standard" >
@@ -1100,7 +1289,7 @@ HERE;
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-endstation-decsr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-endstation-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Describe reason for multiple needs and prioritization</td>
         </tr>
@@ -1131,7 +1320,7 @@ HERE;
         <tr>
           <td class="item item_group noborder"     ><?=($i === 1 ? "MEC Diagnostics" :  "&nbsp;")?></td>
           <td class="prio  <?=$extra?>" ><?=$i?></td>
-          <td class="val"               ><?=xraytech_mec_diagnostics($sect.'-diag-'.$i)?></td>
+          <td class="val"               ><?=xraytech_mec_diagnostics($sect.'-mecdiag-'.$i)?></td>
           <td class="unit  <?=$extra?>" >&nbsp;</td>
           <td class="instr <?=$extra?>" ><?=($i === 1 ? $instr_select : "&nbsp;")?></td>
         </tr>
@@ -1139,14 +1328,14 @@ HERE;
         <tr>
           <td class="item noborder" >↳</td>
           <td class="prio"          >&nbsp;</td>
-          <td class="val"           ><?=textarea($sect.'-diag-other')?></td>
+          <td class="val"           ><?=textarea($sect.'-mecdiag-other')?></td>
           <td class="unit"          >&nbsp;</td>
           <td class="instr"         >If Other, describe</td>
         </tr>
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-diag-decsr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-mecdiag-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
           <td class="instr border1" >Describe reason for multiple diagnostics and prioritization</td>
         </tr>
@@ -1470,7 +1659,7 @@ HERE;
   <option> GVDN </option>
   <option> Rayleigh jet </option>
   <option> Sheet jet </option>
-  <option> High viscosity </option>
+  <option> High viscosity jet </option>
   <option> Drop on demand </option>
   <option> MESH </option>
   <option> Piezo valve </option>
@@ -1554,25 +1743,28 @@ HERE;
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "Samples" : "&nbsp;")?></td>
-          <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=input($sect.'-samples-'.$i)?></td>
+          <td class="prio"                      ><?=select_quantity($sect.'-samples-'.$i.'-prio')?></td>
+          <td class="val"                       ><?=input          ($sect.'-samples-'.$i        )?></td>
           <td class="unit             noborder" >&nbsp;</td>
           <td class="instr            noborder" ><?=($i === 1 ? "List all samples you intend to measure during your beamline" : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
           <td class="item noborder"  >&nbsp;</td>
-          <td class="prio"  >&nbsp;</td>
-          <td class="val"   ><?=input($sect.'-samples-10')?></td>
+          <td class="prio"           ><?=select_quantity($sect.'-samples-10-prio')?></td>
+          <td class="val"            ><?=input          ($sect.'-samples-10'     )?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >&nbsp;</td>
         </tr>
         <tr>
           <td class="item  border1" >&nbsp;</td>
           <td class="prio  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=textarea($sect.'-samples-decsr')?></td>
+          <td class="val   border1" ><?=textarea($sect.'-samples-descr')?></td>
           <td class="unit  border1" >&nbsp;</td>
-          <td class="instr border1" >Provide additional sample information here if needed.</td>
+          <td class="instr border1" >
+            Provide additional sample information here if needed.
+            Indicate which samples are must-have for the success of the experiment.
+          </td>
         </tr>
         <tr>
           <td class="item item_group noborder" >Sample Environment</td>
@@ -1591,8 +1783,8 @@ HERE;
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "Sample delivery method" : "&nbsp;")?></td>
-          <td class="prio             noborder" >&nbsp;</td>
-          <td class="val"                       ><?=sample_delivery_method($sect.'-deliverymethod-'.$i)?></td>
+          <td class="prio             noborder" ><?=select_quantity       ($sect.'-deliverymethod-'.$i.'-prio')?></td>
+          <td class="val"                       ><?=sample_delivery_method($sect.'-deliverymethod-'.$i       )?></td>
           <td class="unit             noborder" >&nbsp;</td>
           <td class="instr            noborder" ><?=($i === 1 ? "What general sample delivery method is required for your experiment?  If multiple, specify all.
 " : "&nbsp;")?></td>
@@ -1600,7 +1792,7 @@ HERE;
 <?php } ?>
         <tr>
           <td class="item noborder"  >&nbsp;</td>
-          <td class="prio"  >&nbsp;</td>
+          <td class="prio"  ><?=select_quantity       ($sect.'-deliverymethod-10-prio')?></td>
           <td class="val"   ><?=sample_delivery_method($sect.'-deliverymethod-10')?></td>
           <td class="unit"  >&nbsp;</td>
           <td class="instr" >&nbsp;</td>
@@ -1610,7 +1802,10 @@ HERE;
           <td class="prio  border1"  >&nbsp;</td>
           <td class="val   border1"   ><?=textarea($sect.'-deliverymethod-other')?></td>
           <td class="unit  border1"  >&nbsp;</td>
-          <td class="instr border1" >If Other, describe</td>
+          <td class="instr border1" >
+            If Other, describe.
+            Indicate which methods are must-have for the success of the experiment.
+          </td>
         </tr>
 
         <tr>
@@ -1894,7 +2089,8 @@ HERE;
         <p>The LCLS DAQ supports a number of cameras, digitizers, encoders and other
            devices that can be recorded and analyzed alongside the rest of the science data.
            Please fill out this section with the LCLS point of contact to identify any
-           special instrumentation needs that are not already captured in the Detectors tab.
+           special instrumentation needs that are <b>not already captured</b> in
+           the <b>Detectors</b> tab.
            Specifically, this information will be used to ensure that all necessary equipment
            is available in this hutch at the time of the experiment.</p>
       </div>
@@ -1909,7 +2105,21 @@ HERE;
           </tr>
         </thead>
         <tbody>
+<?php for ($i = 1; $i <= 20; $i++) { $extra = $i < 5 ? "noborder" : "" ; ?>
           <tr>
+            <td class="item item_group noborder" ><?=($i === 1 ? "Device" : "&nbsp;")?></td>
+            <td class="prio         <?=$extra?>" ><?=select_quantity($sect.'-dev-'.$i.'-qty'  )?></td>
+            <td class="val"                      ><?=input          ($sect.'-dev-'.$i.'-descr')?></td>
+            <td class="instr        <?=$extra?>" ><?=($i === 1 ? "Describe (1 item or system per line)" : "&nbsp;")?></td>
+          </tr>
+<?php } ?>
+          <tr>
+            <td class="item   border1" >&nbsp;</td>
+            <td class="prio   border1" >&nbsp;</td>
+            <td class="val    border1" ><?=textarea($sect.'-comments')?></td>
+            <td class="instr  border1" >Put your comments (if any)</td>
+          </tr>
+<!--          <tr>
             <td class="item item_group noborder" >Camera binning requirements</td>
             <td class="prio noborder"            >&nbsp;</td>
             <td class="val"                      ><?=data_camera_binning($sect.'-dev-cam-binning')?></td>
@@ -1981,7 +2191,7 @@ HERE;
             <td class="prio   border1" >&nbsp;</td>
             <td class="val    border1" ><?=textarea($sect.'-dev-other-comments')?></td>
             <td class="instr  border1" >Put your comments for Other Devices</td>
-          </tr>
+          </tr>-->
         </tbody>
       </table>
     </div>
@@ -2007,10 +2217,21 @@ HERE;
     <div class="data-sect" >
 
       <div class="comments">
-        <p>LCLS provides two software frameworks (AMI and psana-python) to analyze
-           data on-the-fly as it is being taken.  If you will be using user-supplied
-           software (in addition to AMI and psana) to perform real-time analysis
-           against data in shared memory, please list the software package(s) below.</p>
+        <p>LCLS provides two software frameworks (<b>AMI</b> and <b>psana-python</b>)
+           to analyze data on-the-fly as data are being acquired.
+        </p>
+        <p>More information can be found here:</p>
+        <ul>
+          <li>
+            <a class="link"
+               target=_blank"
+               href="https://confluence.slac.stanford.edu/display/PCDS/Prompt+Analysis" >LCLS Prompt Analysis</a>
+          </li>
+        </ul>
+        <p>If you will be using user-supplied software (in addition to <b>AMI</b> and 
+           <b>psana</b>) to perform real-time analysis against data in shared memory, 
+           please list the software package(s) below.</p>
+
       </div>
       <table class="analysis" >
         <thead>
@@ -2022,14 +2243,27 @@ HERE;
         </thead>
         <tbody>
           <tr>
-            <td class="item  border1" >Shared memory Analysis?</td>
-            <td class="val   border1" ><?=data_online_shared($sect.'-shmem')?></td>
-            <td class="instr border1" >&nbsp;</td>
+            <td class="item  noborder" >Shared memory Analysis?</td>
+            <td class="val   "         ><?=data_online_shared($sect.'-shmem')?></td>
+            <td class="instr "         >&nbsp;</td>
           </tr>
           <tr>
-            <td class="item  border1" >Comments or other requirements</td>
-            <td class="val   border1" ><?=textarea($sect.'-shmem-comments')?></td>
-            <td class="instr border1" >
+            <td class="item  noborder" >Monitoring Quantities</td>
+            <td class="val   "         ><?=textarea($sect.'-qty')?></td>
+            <td class="instr "         >
+              List which physical quantities/parameters provide indication 
+              that the experiment is collecting good data (e.g., <b>spectra</b>,
+              <b>crystallography indexing rates</b>, <b>femtosecond pulse lasing-time-structure using “XTCAV”</b>,
+              <b>pump-probe timing</b>, etc.).
+              Also indicate which core tools/algorithms are needed to operate/redirect
+              the experiment (e.g., <b>hit rates</b>, <b>spectra</b>, <b>constant-fraction discriminators</b>,
+              <b>tools to “scan” to optimize experimental setup</b>, <b>online photon finding</b>, etc.).
+            </td>
+          </tr>
+          <tr>
+            <td class="item  noborder" >Comments or other requirements</td>
+            <td class="val   "         ><?=textarea($sect.'-shmem-comments')?></td>
+            <td class="instr "         >
               Please list the user-supplied software that you would
               like to use for real-time analysis against data in shared memory here.
               Otherwise indicate if you would like further assistance from us (explaining
@@ -2076,20 +2310,34 @@ HERE;
         </thead>
         <tbody>
           <tr>
-            <td class="item noborder" >Assistance is needed?</td>
-            <td class="val"           ><?=yes_no($sect.'-ana-assist')?></td>
-            <td class="instr"         >Indicate <b>Yes</b> if you like someone from the analysis group
-                                       to contact you before your experiment (highly recommended for
-                                       first-time LCLS users)</td>
+            <td class="item  noborder" >Assistance is needed?</td>
+            <td class="val   "         ><?=yes_no($sect.'-ana-assist')?></td>
+            <td class="instr "         >
+              Indicate <b>Yes</b> if you like someone from the analysis group
+              to contact you before your experiment (highly recommended for
+              first-time LCLS users)
+            </td>
           <tr>
-            <td class="item noborder" >Computing Resources</td>
-            <td class="val"           ><?=data_primary_location($sect.'-ana-location')?></td>
-            <td class="instr"         >Indicate where you're planning to analyze your data.
-                                       If you're planing to use NERSC supercomputers to do your
-                                       analysis then you may need to contact us ahead of time to
-                                       get help with setting up a computer account at NERSC.</td>
+            <td class="item  noborder" >Computing Resources</td>
+            <td class="val   "         ><?=data_primary_location($sect.'-ana-location')?></td>
+            <td class="instr "         >
+              Indicate where you're planning to analyze your data.
+              If you're planing to use NERSC supercomputers to do your
+              analysis then you may need to contact us ahead of time to
+              get help with setting up a computer account at NERSC.
+            </td>
           </tr>
-            <tr>
+          <tr>
+            <td class="item  noborder" >Data Analysis Plan</td>
+            <td class="val   "         ><?=textarea($sect.'-ana-plan')?></td>
+            <td class="instr "         >
+              Indicate which frameworks (e.g., <b>psana-python</b>, <b>cheetah</b>/<b>crystfel</b>, 
+              <b>cctbx</b>, <b>matlab</b>, etc.) and algorithms (e.g., <b>crystallography</b>,
+              <b>photon-finding or counting</b>, <b>pump-probe timing</b>, <b>image integration</b>, etc.)
+              you plan on using to analyze your data.
+            </td>
+          </tr>
+          <tr>
             <td class="item  noborder" >&nbsp;</td>
             <td class="val"            ><?=textarea($sect.'-ana-other')?></td>
             <td class="instr"          >Comments about your offline data analysis needs</td>
@@ -2130,7 +2378,13 @@ HERE;
 ?>
   
   <div id="contr" >
-    
+
+    <div class="comments">
+      <p>The experiment spokesperson is NOT expected to know all of this in detail
+         and should fill out what they know and their LCLS contact will help fill
+         out the needs after discussions with the spokesperson.</p>
+    </div>
+
     <div class="control-sect" >
       <h1>1. USER Supplied Computers</h1>
       <div class="comments">
@@ -2445,7 +2699,9 @@ HERE;
   <div id="user" >
 
     <div class="comments">
-      Instructions for this sections are to be defined.
+      Please identify all equipment you plan to bring to LCLS for your experiment.
+      ALL non-SLAC owned equipment must be identified.  Please use the comment boxes
+      below to describe the equipment you plan to bring on-site.
     </div>
 
     <table class="standard" >
@@ -2460,36 +2716,72 @@ HERE;
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
           <td class="item  item_group noborder" ><?=($i === 1 ? "User-supplied Laser Equipment" : "&nbsp;")?></td>
-          <td class="val"                       ><?=input($sect.'-userequip-'.$i)?></td>
+          <td class="val"                       ><?=input($sect.'-laser-'.$i)?></td>
           <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
           <td class="item  border1" >&nbsp;</td>
-          <td class="val   border1" ><?=input($sect.'-userequip-10')?></td>
+          <td class="val   border1" ><?=input($sect.'-laser-10')?></td>
           <td class="instr border1" >&nbsp;</td>
         </tr>
-        <tr>
-          <td class="item  item_group noborder" >Other Laser Requirements</td>
-          <td class="val"                       ><?=textarea($sect.'-other')?></td>
-          <td class="instr noborder"            >Please list and describe additional requirements for optical laser systems</td>
-        </tr>
+<!--        <tr>
+          <td class="item  border1" >Other Laser Requirements</td>
+          <td class="val   border1" ><?=textarea($sect.'-laser-other')?></td>
+          <td class="instr border1" >Please list and describe additional requirements for optical laser systems</td>
+        </tr>-->
 <?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
-          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Equipment" : "&nbsp;")?></td>
-          <td class="val"            ><?=input($sect.'-userenv-'.$i)?></td>
-          <td class="instr noborder" ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied sample injector/environment " : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-sampleenv-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
         </tr>
 <?php } ?>
         <tr>
-          <td class="item  border1"  >&nbsp;</td>
-          <td class="val   border1"   ><?=input($sect.'-userenv-10')?></td>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-sampleenv-10')?></td>
           <td class="instr border1" >&nbsp;</td>
         </tr>
+<!--        <tr>
+          <td class="item  item_group border1" >User Supplied Detectors</td>
+          <td class="val   border1"            ><?=textarea($sect.'-detectors')?></td>
+          <td class="instr border1"            >Please list and describe additional detectors which you're bringing to LCLS</td>
+        </tr>-->
+<?php for ($i = 1; $i <= 9; $i++) { ?>
         <tr>
-          <td class="item  item_group noborder" >User Supplied Detectors</td>
-          <td class="val"                       ><?=textarea($sect.'-detectors')?></td>
-          <td class="instr noborder"            >Please list and describe additional detectors which you're bringing to LCLS</td>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Detectors" : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-detectors-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-detectors-10')?></td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+<?php for ($i = 1; $i <= 9; $i++) { ?>
+        <tr>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Controls Equipment" : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-controls-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  border1" >&nbsp;</td>
+          <td class="val   border1" ><?=input($sect.'-controls-10')?></td>
+          <td class="instr border1" >&nbsp;</td>
+        </tr>
+<?php for ($i = 1; $i <= 9; $i++) { ?>
+        <tr>
+          <td class="item  item_group noborder" ><?=($i === 1 ? "User-Supplied Equipment (misc)" : "&nbsp;")?></td>
+          <td class="val"                       ><?=input($sect.'-misc-'.$i)?></td>
+          <td class="instr noborder"            ><?=($i === 1 ? "Describe (1 item or system per line)." : "&nbsp;")?></td>
+        </tr>
+<?php } ?>
+        <tr>
+          <td class="item  noborder" >&nbsp;</td>
+          <td class="val   noborder" ><?=input($sect.'-misc-10')?></td>
+          <td class="instr noborder" >&nbsp;</td>
         </tr>
       </tbody>
     </table>
@@ -2529,6 +2821,8 @@ HERE;
 <?php
 }) ;
 ?>
+
+</div>
 
 </body>
 </html>

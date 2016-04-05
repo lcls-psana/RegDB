@@ -31,13 +31,6 @@ HERE;
         $SVC->urawi()->proposalInfo($proposalNo) ,
         "No such proposal found: {$proposalNo}. Did yoy miss the letter 'L' at the begining of the proposal?") ;
 
-    $collaborators = array() ;
-    foreach ($info->members() as $m) {
-        array_push($collaborators, array (
-            'personId' => $m->personId() ,
-            'contact'  => $m->name()
-        )) ;
-    }
     $lcls_contacts = $SVC->regdb()->getProposalContacts_Run14() ;
 
     $urawi_authentication = $SVC->authdb()->authName() == '' ;
@@ -101,12 +94,8 @@ div.hidden {
 }
 #auth > h1 {
     margin-left:    64px;
-    font-size:      20px;
-}
-#auth > #hint {
-    margin-left:    84px;
     margin-bottom:  25px;
-    width:  440px;
+    font-size:      20px;
 }
 #auth .name {
     width:          72px;
@@ -534,7 +523,6 @@ a:hover, a.link:hover {
 
 var proposal = '<?=$proposalNo?>' ;
 var proposal_spokesPerson_personId = <?=$info->contact()->personId()?> ;
-var proposal_collaborators = <?=json_encode($collaborators)?> ;
 
 var urawi_authentication = <?=($urawi_authentication ? 1 : 0)?> ;
 var urawi_personId       = 0 ;
@@ -709,24 +697,13 @@ $(function () {
                         on_authentication_error("You don't seem to have a valid URAWI account") ;
                         return ;
                     }
-                    if (proposal_spokesPerson_personId == urawi_personId) {
-                        is_editor = 1 ;
-                    } else {
-                        for (var i in proposal_collaborators) {
-                            var collaborator = proposal_collaborators[i] ;
-                            if (collaborator.personId == urawi_personId) {
-                                urawi_contact = collaborator.contact ;
-                                is_editor = 1 ;
-                                break ;
-                            }
-                        }
-                    }
-                    if (!is_editor) {
+                    if (proposal_spokesPerson_personId != urawi_personId) {
                         on_authentication_error (
                             "You don't have access privileges to view/edit the questionnaire for this proposal. " +
                             "Error code: '"+proposal_spokesPerson_personId+":"+urawi_personId+"'") ;
                         return ;
                     }
+                    is_editor = 1 ;
                     on_authenticated() ;
                 } ,
                 on_authentication_error
@@ -748,12 +725,7 @@ $(function () {
       <div id="title">LCLS Run 14 Proposal : <?=$proposalNo?></div>
     </center>
 
-    <h1>Spokesperson login with the LCLS User Portal credentials</h1>
-    <div id="hint">
-      This is the same login used for submitting your proposal. Usually that would be your e-mail address.
-      If you can't remember you password then follow the
-      <a class="link" target="_blank" href="https://www-ssrl.slac.stanford.edu/URAWI/forgottenPasswordForm.html">&lt;password reset link&gt;</a>
-    </div>
+    <h1>Spokesperson login with URAWI credentials</h1>
     <div class="name"  style="float:left;" >Account</div>
     <div class="value" style="float:left;" ><input id="username" type="text"     size="16" /></div>
     <div style="clear:both;"></div>

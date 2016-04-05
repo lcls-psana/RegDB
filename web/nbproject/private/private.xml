@@ -5,6 +5,9 @@
         <group name="PCDS Web App"/>
         <group name="PCDS Web Apps">
             <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/regdbexperiment.class.php</file>
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/lib/regdb/regdb.class.php</file>
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/run14_proposal_reports.php</file>
+            <file>file:/N:/lcls/releases/pswww-apps-dev/RegDB/web/html/run14_proposal_questionnaire.php</file>
         </group>
         <group/>
     </open-files>
