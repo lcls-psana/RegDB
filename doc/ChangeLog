@@ -11,6 +11,11 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-06
+2016-04-14 Igor Gaponenko
+- changes in the list of allowed Run 14 proposals
+- removed an erroneous detector entry from the list of Run 14 detectors
+
 Tag: V00-03-05
 2016-04-04 Igor Gaponenko
 - Run 14 editing delegation to the members of the proposal

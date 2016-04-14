@@ -1952,7 +1952,6 @@ HERE;
   <option> CSPAD-140k </option>
   <option> CSPAD-570k </option>
   <option> CSPAD-2.3M </option>
-  <option> SLAC Epix </option>
   <option> ePix100 </option>
   <option> pnCCD </option>
   <option> Rayonix MX170-HS </option>
