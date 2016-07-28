@@ -807,6 +807,7 @@ HERE;
          */
         if( is_null( $instr ) || ( $instr == 'NEH' )) {
             $groups['ps-las'] = True;
+            $groups['ps-mec-las'] = True;
         }
 
         /* Facility e-logs.

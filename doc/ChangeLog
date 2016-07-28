@@ -11,6 +11,13 @@ Package author: Igor Gaponenko
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-07
+2016-07-28 Igor Gaponenko
+- POSIX group management support for group: ps-mec-las
+- handling pseudo-instrument SSC as if it were CXI. This was
+needed to properly process URAWI proposals registered for that
+pseudo-instrument
+
 Tag: V00-03-06
 2016-04-14 Igor Gaponenko
 - changes in the list of allowed Run 14 proposals

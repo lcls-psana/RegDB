@@ -129,7 +129,13 @@ class URAWIProposal {
     }
     public function posix_group ($startDate=null) {
         if (is_null($this->group)) {
-            $this->group = strtolower($this->info->instrument.substr($this->info->proposalNo, 1, 3)) ;
+
+            // ATTENTION: making a temporary correction for this pseudo-instrument name
+            //            which is just aanother camera (SSC) at the parasytic (second)
+            //            station of CXI.
+            $instr_name = $this->info->instrument == 'SSC' ? 'CXI' : $this->info->instrument ;
+
+            $this->group = strtolower($instr_name.substr($this->info->proposalNo, 1, 3)) ;
             $startDate = $this->info->startDate ? $this->info->startDate : $startDate ;
             if ($startDate) {
                 $this->group .= substr($startDate, 2, 2) ;
