@@ -112,7 +112,7 @@ def __now_64():
     t = time.time()
     sec = int(t)
     nsec = int(( t - sec ) * 1e9 )
-    return sec*1000000000L + nsec
+    return sec*1000000000 + nsec
 
 # ---------------------------------------------------------------------
 # Look for an experiment with specified identifier and obtain its name.
@@ -331,9 +331,9 @@ def experiment_runs(instr, exper=None, station=0):
         exper_id = name2id(exper)
     runs = []
     for row in __do_select_many("SELECT * FROM logbook.run WHERE exper_id=%d ORDER BY begin_time" % (exper_id,)):
-        row['begin_time_unix'] =  int(row['begin_time']/1000000000L)
+        row['begin_time_unix'] =  int(row['begin_time']/1000000000)
         row['end_time_unix'] = None
-        if row['end_time']:  row['end_time_unix'] = int(row['end_time']/1000000000L)
+        if row['end_time']:  row['end_time_unix'] = int(row['end_time']/1000000000)
         runs.append(row)
 
     return runs
