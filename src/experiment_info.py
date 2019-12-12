@@ -640,7 +640,7 @@ if __name__ == "__main__" :
  """ % len(names))
 
 
-    except db.Error, e:
+    except db.Error as e:
          print('MySQL operation failed because of:', e)
          sys.exit(1)
 
