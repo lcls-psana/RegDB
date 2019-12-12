@@ -19,6 +19,7 @@ part of it, please give an appropriate acknowledgement.
 
 @author Igor Gaponenko
 """
+from __future__ import print_function
 
 #------------------------------
 #  Module's version from SVN --
@@ -48,9 +49,9 @@ from RegDB.online_iface import id2experiment
 if __name__ == "__main__" :
 
     exper = id2experiment(53)
-    print exper
+    print(exper)
 
     exper = id2experiment(100)
-    print exper
+    print(exper)
 
     sys.exit(0)

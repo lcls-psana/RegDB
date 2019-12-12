@@ -19,6 +19,7 @@ part of it, please give an appropriate acknowledgment.
 
 @author Igor Gaponenko
 """
+from __future__ import print_function
 
 #------------------------------
 #  Module's version from SVN --
@@ -497,62 +498,62 @@ if __name__ == "__main__" :
 
     try:
 
-        print 'experiment id 47 translates into %s' % id2name(47)
-        print 'experiment sxrcom10 translates into id %d' % name2id('sxrcom10')
-        print 'data path for experiment id 116 set to %s' % getexp_datapath(116)
-        print 'current time is %d nanoseconds' % __now_64()
+        print('experiment id 47 translates into %s' % id2name(47))
+        print('experiment sxrcom10 translates into id %d' % name2id('sxrcom10'))
+        print('data path for experiment id 116 set to %s' % getexp_datapath(116))
+        print('current time is %d nanoseconds' % __now_64())
 
 
 
 
 
-        print """
+        print("""
  -------+------------+------+------------------------------------------------+----------
         |            |      |            activation time                     |
   instr | experiment |   id +---------------------+--------------------------+ by user
         |            |      |         nanoseconds | local timezone           |
- -------+------------+------+---------------------+--------------------------+----------"""
+ -------+------------+------+---------------------+--------------------------+----------""")
 
         for instr in ('AMO','SXR','XPP','XCS','CXI','MEC','XYZ'):
             exp_info = active_experiment(instr)
             if exp_info is None:
-                print "  %3s   | *** no experiment found in the database for this instrument ***" % instr
+                print("  %3s   | *** no experiment found in the database for this instrument ***" % instr)
             else:
-                print "  %3s   | %-10s | %4d | %19d | %20s | %-8s" % exp_info
+                print("  %3s   | %-10s | %4d | %19d | %20s | %-8s" % exp_info)
 
-        print ""
+        print("")
 
-        print 'open files of the last run of experiment id 161:'
+        print('open files of the last run of experiment id 161:')
         for file in get_open_files(161):
-            print file
+            print(file)
 
-        print 'open files of run 1332 of experiment id 55:'
+        print('open files of run 1332 of experiment id 55:')
         for file in get_open_files(55,1332):
-            print file
+            print(file)
 
-        print 'open files of a  non-valid experiment id 9999999:'
+        print('open files of a  non-valid experiment id 9999999:')
         for file in get_open_files(9999999):
-            print file
+            print(file)
 
 
 
 
 
 
-        print """
+        print("""
 
  Runs for the current experiment at XPP:
 
  --------+-------+---------------------+---------------------
   exp_id |  run  |     begin  time     |      end  time
- --------+-------+---------------------+---------------------"""
+ --------+-------+---------------------+---------------------""")
 
         for run in experiment_runs('XPP'):
             begin_time = datetime.datetime.fromtimestamp(run['begin_time_unix']).strftime('%Y-%m-%d %H:%M:%S')
             end_time = ''
             if run['end_time_unix']:
                 end_time = datetime.datetime.fromtimestamp(run['end_time_unix']).strftime('%Y-%m-%d %H:%M:%S')
-            print "  %6d | %5d | %19s | %19s" % (run['exper_id'],run['num'],begin_time,end_time,)
+            print("  %6d | %5d | %19s | %19s" % (run['exper_id'],run['num'],begin_time,end_time,))
 
 
         instr_name = 'SXR'
@@ -564,17 +565,17 @@ if __name__ == "__main__" :
 
 
 
-        print """
+        print("""
 
  Detector names for all runs for experiment %s/%s :
 
  --------+---------------------------------------------------------------------------------------------------------
     run  |  detectors
- --------+---------------------------------------------------------------------------------------------------------""" % (instr_name, exper_name,)
+ --------+---------------------------------------------------------------------------------------------------------""" % (instr_name, exper_name,))
 
         for run in experiment_runs(instr_name, exper_name):
             runnum = run['num']
-            print "   %4d  |  %s" % (runnum, '  '.join(detectors(instr_name, exper_name, runnum,)),)
+            print("   %4d  |  %s" % (runnum, '  '.join(detectors(instr_name, exper_name, runnum,)),))
 
 
 
@@ -585,32 +586,32 @@ if __name__ == "__main__" :
         exper_name = 'cxic0213'
         runnum     = 215
 
-        print """
+        print("""
 
  Attributes for run %d of experiment %s/%s :
 
  -------------------+--------------------------------+------------+-------------+------------------------------------------------------------------------
               class |                           name |       type |       descr | value
- -------------------+--------------------------------+------------+-------------+------------------------------------------------------------------------""" % (runnum,instr_name,exper_name,)
+ -------------------+--------------------------------+------------+-------------+------------------------------------------------------------------------""" % (runnum,instr_name,exper_name,))
 
 
         for attr in run_attributes(instr_name, exper_name, runnum):
             attr_val = attr['val']
             if attr_val is None: attr_val = ''
-            print "  %17s | %30s | %10s | %11s | %s" % (attr['class'],attr['name'],attr['type'],attr['descr'][:11],str(attr_val),)
+            print("  %17s | %30s | %10s | %11s | %s" % (attr['class'],attr['name'],attr['type'],attr['descr'][:11],str(attr_val),))
 
 
 
 
 
 
-        print """
+        print("""
 
  Calibration runs of experiment %s/%s :
 
  --------+--------------------------------------------+-----------------------------------------
     run  |  Calibrations                              |  Comment
- --------+--------------------------------------------+-----------------------------------------""" % (instr_name, exper_name,)
+ --------+--------------------------------------------+-----------------------------------------""" % (instr_name, exper_name,))
 
 
         entries = calibration_runs(instr_name, exper_name)
@@ -622,25 +623,25 @@ if __name__ == "__main__" :
 
             # report runs which have at least one calibratin type
             if calibtypes:
-                print "   %4d  |  %-40s  |  %s"  % (run, calibtypes, comment,)
+                print("   %4d  |  %-40s  |  %s"  % (run, calibtypes, comment,))
 
 
-        print """
+        print("""
 
  Unique detector names which have ever been used for any experiments and runs
- ----------------------------------------------------------------------------"""
+ ----------------------------------------------------------------------------""")
 
         names = unique_detector_names()
         for name in names:
-            print "   %s" % name
+            print("   %s" % name)
 
-        print """ -----------------------------------------
+        print(""" -----------------------------------------
    Total: %d
- """ % len(names)
+ """ % len(names))
 
 
     except db.Error, e:
-         print 'MySQL operation failed because of:', e
+         print('MySQL operation failed because of:', e)
          sys.exit(1)
 
     sys.exit(0)

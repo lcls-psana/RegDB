@@ -1,3 +1,4 @@
+from __future__ import print_function
 # ------------------------------------------------------------------
 # Find below utilities fetching various information from Experiments
 # Registration database.
@@ -73,11 +74,11 @@ def name2id(name):
 if __name__ == "__main__" :
 
     try:
-        print 'experiment id 47 translates into %s' % id2name(47)
-        print 'experiment sxrcom10 translates into id %d' % name2id('sxrcom10')
+        print('experiment id 47 translates into %s' % id2name(47))
+        print('experiment sxrcom10 translates into id %d' % name2id('sxrcom10'))
 
-    except db.Error, e:
-         print 'MySQL operation failed because of:', e
+    except db.Error as e:
+         print('MySQL operation failed because of:', e)
          sys.exit(1)
 
     sys.exit(0)
