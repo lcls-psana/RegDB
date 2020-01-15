@@ -92,7 +92,7 @@ class RegDb ( object ) :
         cursor = self._conn.cursor()
         cursor.execute("SELECT i.id, i.name, i.descr FROM instrument i ORDER BY i.id")
         
-        return map(tuple, cursor.fetchall())
+        return list(map(tuple, cursor.fetchall()))
 
 
     # ===================
@@ -114,7 +114,7 @@ class RegDb ( object ) :
         else:
             cursor.execute(q)
         
-        return map(dict, cursor.fetchall())
+        return list(map(dict, cursor.fetchall()))
 
 
     # =================================
@@ -202,7 +202,7 @@ class RegDb ( object ) :
             ORDER BY sw.switch_time DESC LIMIT %s"""
         cursor.execute(q, (instr, limit))
 
-        return map(lambda x: (x[0], Time.from64(x[1]), x[2]), cursor.fetchall())
+        return [(x[0], Time.from64(x[1]), x[2]) for x in cursor.fetchall()]
 
 
     # =========================
@@ -239,7 +239,7 @@ class RegDb ( object ) :
                 WHERE p.exper_id = e.id AND e.instr_id = i.id AND i.name=%s AND e.name=%s"""
             cursor.execute(q, (instr, exper))
             
-            return map(tuple, cursor.fetchall())
+            return list(map(tuple, cursor.fetchall()))
 
     # =========================
     # Set experiment parameters

@@ -20,6 +20,7 @@ part of it, please give an appropriate acknowledgment.
 @author Igor Gaponenko
 """
 from __future__ import print_function
+from __future__ import division
 
 #------------------------------
 #  Module's version from SVN --
