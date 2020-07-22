@@ -258,13 +258,13 @@ if __name__ == "__main__" :
     for attr in run_attributes('CXI', 'cxic0213', 215):
         attr_val = attr['val']
         if attr_val is None: attr_val = ''
-        print "  %17s | %30s | %10s | %11s | %s" % (attr['class'],attr['name'],attr['type'],attr['descr'][:11],str(attr_val),)
+        print("  %17s | %30s | %10s | %11s | %s" % (attr['class'],attr['name'],attr['type'],attr['descr'][:11],str(attr_val),))
 
     print("Only Calibrations")
     for attr in run_attributes('CXI', 'cxic0213', 215, "Calibrations"):
         attr_val = attr['val']
         if attr_val is None: attr_val = ''
-        print "  %17s | %30s | %10s | %11s | %s" % (attr['class'],attr['name'],attr['type'],attr['descr'][:11],str(attr_val),)
+        print("  %17s | %30s | %10s | %11s | %s" % (attr['class'],attr['name'],attr['type'],attr['descr'][:11],str(attr_val),))
 
     entries = calibration_runs('CXI', 'cxic0213')
     for run in sorted(entries.keys()):
@@ -273,4 +273,4 @@ if __name__ == "__main__" :
         calibtypes =  ' '.join([calibtype for calibtype in info['calibrations']])
         # report runs which have at least one calibratin type
         if calibtypes:
-            print "   %4d  |  %-40s  |  %s"  % (run, calibtypes, comment,)
+            print("   %4d  |  %-40s  |  %s"  % (run, calibtypes, comment,))
